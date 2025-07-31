@@ -1,0 +1,58 @@
+# Next.js build output
+.next/
+out/
+
+# Production build
+dist/
+
+# Node modules
+node_modules/
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+bun.lockb
+
+# Local env files
+.env
+.env.local
+.env.*.local
+
+# OS-specific files
+.DS_Store
+Thumbs.db
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+
+# Testing
+coverage/
+*.lcov
+
+# TypeScript
+*.tsbuildinfo
+
+# Optional: Mac system files
+.AppleDouble
+.LSOverride
+
+# Optional: image/editor specific
+*.log
+*.lock
+*.bak
+*.tmp
+*.orig
+
+# Optional: shadcn/ui generated registry
+components.json
+
+# Optional: vercel CLI local config
+.vercel
+
+# Optional: next/image cache
+public/images/cache/
+.kiro
