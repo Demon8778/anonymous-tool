@@ -4,18 +4,18 @@ import React, { useState, useCallback, useEffect, useRef, Suspense } from 'react
 import { useRouter, useSearchParams } from 'next/navigation';
 import { 
   Download, 
-  Share2, 
   RotateCcw, 
   Play, 
   Pause, 
   Settings, 
   Sparkles,
   Zap,
-  ArrowLeft,
   CheckCircle,
   AlertCircle,
   Info,
-  Loader2
+  Loader2,
+  Search,
+  ArrowLeft
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -23,16 +23,20 @@ import { Progress } from '@/components/ui/progress';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
-import { PageHeader, PageHeaderActions } from '@/components/layout/PageHeader';
 import { TextOverlayEditor } from '@/components/text/TextOverlayEditor';
 import { DraggableText } from '@/components/text/DraggableText';
 import { SharingControls } from '@/components/gif/SharingControls';
+import { GifSearchForm } from '@/components/gif/GifSearchForm';
+import { GifGrid } from '@/components/gif/GifGrid';
+import { GifEditorDialog } from '@/components/dialogs/GifEditorDialog';
+import { SharingDialog } from '@/components/dialogs/SharingDialog';
 import { useTextOverlay } from '@/hooks/useTextOverlay';
+import { useGifSearch } from '@/hooks/useGifSearch';
+import { useDialogState } from '@/hooks/useDialogState';
 import { getGifProcessingService } from '@/lib/services/gifProcessingService';
 import type { Gif, ProcessedGif, ProcessingProgress } from '@/lib/types/gif';
-import type { TextOverlay } from '@/lib/types/textOverlay';
-import { cn } from '@/lib/utils';
 
 interface GenerationPageState {
   selectedGif: Gif | null;
@@ -61,6 +65,29 @@ function GeneratePageContent() {
     showSuccessAnimation: false,
   });
 
+  // Tab state for search/generate
+  const [activeTab, setActiveTab] = useState<'search' | 'generate'>('search');
+
+  // Search functionality
+  const {
+    searchResults,
+    isLoading: isSearchLoading,
+    error: searchError,
+    currentQuery,
+    performSearch,
+    setCurrentQuery,
+    selectedGif: searchSelectedGif,
+    setSelectedGif: setSearchSelectedGif,
+  } = useGifSearch();
+  // Dialog management
+  const {
+    dialogs,
+    openGifEditor,
+    openSharing,
+    closeDialog,
+    closeAllDialogs,
+  } = useDialogState();
+
   // Initialize from URL params
   useEffect(() => {
     const gifId = searchParams.get('gif');
@@ -79,6 +106,7 @@ function GeneratePageContent() {
         source: 'giphy',
       };
       setState(prev => ({ ...prev, selectedGif: mockGif }));
+      setActiveTab('generate');
     }
   }, [searchParams, state.selectedGif]);
 
@@ -231,6 +259,40 @@ function GeneratePageContent() {
     addOverlay();
   }, [addOverlay]);
 
+  // Handle search
+  const handleSearch = useCallback(async (query: string) => {
+    setCurrentQuery(query);
+    await performSearch(query);
+  }, [setCurrentQuery, performSearch]);
+
+  // Handle GIF selection from search
+  const handleGifSelect = useCallback((gif: Gif) => {
+    setSearchSelectedGif(gif);
+    setState(prev => ({ ...prev, selectedGif: gif }));
+    setActiveTab('generate');
+    
+    toast({
+      title: "GIF Selected",
+      description: "You can now add text overlays and generate your custom GIF.",
+    });
+  }, [setSearchSelectedGif, toast]);
+
+  // Handle opening GIF editor dialog
+  const handleOpenGifEditor = useCallback((gif: Gif) => {
+    const gifWithContext = {
+      ...gif,
+      selectedAt: new Date(),
+      searchQuery: currentQuery,
+    };
+    openGifEditor(gifWithContext);
+  }, [openGifEditor, currentQuery]);
+
+  // Handle processed GIF from dialog
+  const handleGifGenerated = useCallback((processedGif: ProcessedGif) => {
+    setState(prev => ({ ...prev, processedGif }));
+    openSharing(processedGif);
+  }, [openSharing]);
+
   // Get preview dimensions
   const getPreviewDimensions = useCallback(() => {
     if (!previewRef.current || !state.selectedGif) {
@@ -298,252 +360,350 @@ function GeneratePageContent() {
       </div>
 
       <div className="container mx-auto px-4 py-8">
-        {/* No GIF Selected State */}
-        {!state.selectedGif && (
-          <div className="text-center py-16">
-            <Card className="max-w-md mx-auto bg-white/80 backdrop-blur-sm border-white/20">
-              <CardContent className="p-8">
-                <div className="mb-6">
-                  <div className="inline-flex p-4 bg-gradient-to-br from-blue-100 to-purple-100 rounded-full mb-4">
-                    <Info className="h-8 w-8 text-blue-600" />
-                  </div>
-                  <h3 className="text-xl font-bold text-gray-900 mb-2">
-                    No GIF Selected
-                  </h3>
-                  <p className="text-gray-600 mb-6">
-                    Please select a GIF from the search page to get started.
-                  </p>
-                  <Button
-                    onClick={() => router.push('/search')}
-                    className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
-                  >
-                    <ArrowLeft className="h-4 w-4 mr-2" />
-                    Go to Search
-                  </Button>
+        {/* Main Tabs */}
+        <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'search' | 'generate')} className="w-full">
+          <TabsList className="grid w-full grid-cols-2 mb-8">
+            <TabsTrigger value="search" className="flex items-center gap-2">
+              <Search className="h-4 w-4" />
+              Search GIFs
+            </TabsTrigger>
+            <TabsTrigger value="generate" className="flex items-center gap-2" disabled={!state.selectedGif}>
+              <Zap className="h-4 w-4" />
+              Generate
+            </TabsTrigger>
+          </TabsList>
+
+          {/* Search Tab */}
+          <TabsContent value="search" className="space-y-8">
+            {/* Search Form */}
+            <GifSearchForm
+              onSearch={handleSearch}
+              isLoading={isSearchLoading}
+              initialQuery={currentQuery}
+              placeholder="Search for GIFs to customize..."
+            />
+
+            {/* Search Results */}
+            {searchResults && (
+              <div className="space-y-6">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-2xl font-bold text-gray-900">
+                    Search Results
+                  </h2>
+                  <Badge variant="secondary" className="text-sm">
+                    {searchResults.totalCount} results
+                  </Badge>
                 </div>
-              </CardContent>
-            </Card>
-          </div>
-        )}
 
-        {/* Main Content - Split Screen Layout */}
-        {state.selectedGif && (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            {/* Left Panel - GIF Preview */}
-            <div className="space-y-6">
-              {/* GIF Preview Card */}
-              <Card className="bg-white/90 backdrop-blur-sm border-white/20 shadow-xl">
-                <CardHeader className="pb-3">
-                  <div className="flex items-center justify-between">
-                    <CardTitle className="text-lg font-semibold bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-transparent">
-                      Preview
-                    </CardTitle>
-                    <div className="flex items-center gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setState(prev => ({ ...prev, isPlaying: !prev.isPlaying }))}
-                        className="h-8 w-8 p-0"
-                      >
-                        {state.isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={handleReset}
-                        className="h-8 w-8 p-0"
-                        disabled={state.isProcessing}
-                      >
-                        <RotateCcw className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </div>
-                </CardHeader>
-
-                <CardContent className="space-y-4">
-                  {/* GIF Display with Text Overlays */}
-                  <div 
-                    ref={previewRef}
-                    className="relative aspect-video bg-gradient-to-br from-gray-900 via-purple-900 to-blue-900 rounded-lg overflow-hidden group"
-                    onClick={() => setActiveOverlay(null)}
-                  >
-                    {/* GIF Image */}
-                    <img
-                      src={state.isPlaying ? state.selectedGif.url : state.selectedGif.preview}
-                      alt={state.selectedGif.title}
-                      className="w-full h-full object-contain"
-                    />
-
-                    {/* Text Overlays */}
-                    {overlays.map((overlay) => (
-                      <DraggableText
-                        key={overlay.id}
-                        overlay={overlay}
-                        containerWidth={previewDimensions.width}
-                        containerHeight={previewDimensions.height}
-                        isActive={activeOverlayId === overlay.id}
-                        onPositionChange={(position) => handleOverlayPositionChange(overlay.id, position)}
-                        onSelect={() => setActiveOverlay(overlay.id)}
-                        onDragStart={() => startDragging(overlay.id)}
-                        onDragEnd={() => stopDragging(overlay.id)}
-                      />
-                    ))}
-
-                    {/* Processing Overlay */}
-                    {state.isProcessing && (
-                      <div className="absolute inset-0 bg-black/80 flex items-center justify-center rounded-lg">
-                        <div className="text-center text-white">
-                          <div className="w-16 h-16 mx-auto mb-4 relative">
-                            <Loader2 className="w-16 h-16 animate-spin text-blue-500" />
-                          </div>
-                          <p className="text-lg font-medium mb-2">Processing GIF...</p>
-                          <p className="text-sm text-white/80 mb-4">
-                            {state.processingProgress.stage === 'loading' && 'Loading FFmpeg...'}
-                            {state.processingProgress.stage === 'processing' && 'Adding text overlays...'}
-                            {state.processingProgress.stage === 'encoding' && 'Encoding final GIF...'}
-                            {state.processingProgress.stage === 'complete' && 'Complete!'}
-                          </p>
-                          <Progress 
-                            value={state.processingProgress.progress * 100} 
-                            className="w-48 mx-auto"
-                          />
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Success Animation */}
-                    {state.showSuccessAnimation && (
-                      <div className="absolute inset-0 bg-green-500/20 flex items-center justify-center rounded-lg animate-pulse">
-                        <div className="text-center text-white">
-                          <CheckCircle className="w-16 h-16 mx-auto mb-4 text-green-500 animate-bounce" />
-                          <p className="text-lg font-medium">Success!</p>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* GIF Info */}
-                  <div className="flex items-center justify-between text-sm text-gray-600">
-                    <div className="flex items-center gap-4">
-                      <span>{state.selectedGif.width} × {state.selectedGif.height}</span>
-                      {state.selectedGif.duration && (
-                        <span>{(state.selectedGif.duration / 1000).toFixed(1)}s</span>
-                      )}
-                      <Badge variant="secondary" className="text-xs">
-                        {state.selectedGif.source.toUpperCase()}
-                      </Badge>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span>{overlays.length} text overlay{overlays.length !== 1 ? 's' : ''}</span>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Action Buttons */}
-              <Card className="bg-white/90 backdrop-blur-sm border-white/20 shadow-xl">
-                <CardContent className="p-6">
-                  <div className="space-y-4">
-                    {/* Generate Button */}
-                    <Button
-                      onClick={handleProcessGif}
-                      disabled={state.isProcessing || overlays.length === 0}
-                      className="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white py-3"
-                      size="lg"
-                    >
-                      {state.isProcessing ? (
-                        <>
-                          <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                          Processing...
-                        </>
-                      ) : (
-                        <>
-                          <Zap className="mr-2 h-5 w-5" />
-                          Generate GIF
-                        </>
-                      )}
-                    </Button>
-
-                    {/* Download Button */}
-                    {state.processedGif && (
-                      <>
-                        <Separator />
-                        <Button
-                          onClick={handleDownload}
-                          variant="outline"
-                          className="w-full"
-                        >
-                          <Download className="mr-2 h-4 w-4" />
-                          Download GIF
-                        </Button>
-                      </>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Error Alert */}
-              {state.error && (
-                <Alert variant="destructive" className="bg-red-50 border-red-200">
-                  <AlertCircle className="h-4 w-4" />
-                  <AlertTitle>Processing Error</AlertTitle>
-                  <AlertDescription>
-                    {state.error}
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={handleProcessGif}
-                      className="mt-2 ml-0"
-                    >
-                      Try Again
-                    </Button>
-                  </AlertDescription>
-                </Alert>
-              )}
-            </div>
-
-            {/* Right Panel - Text Overlay Editor */}
-            <div className="space-y-6">
-              <TextOverlayEditor
-                overlays={overlays}
-                activeOverlayId={activeOverlayId}
-                onOverlayAdd={handleAddOverlay}
-                onOverlayRemove={removeOverlay}
-                onOverlayDuplicate={duplicateOverlay}
-                onOverlayUpdate={updateOverlay}
-                onActiveOverlayChange={setActiveOverlay}
-                onOverlayMoveUp={moveOverlayUp}
-                onOverlayMoveDown={moveOverlayDown}
-                className="h-[600px]"
-              />
-
-              {/* Sharing Controls */}
-              {state.processedGif && (
-                <SharingControls 
-                  gif={state.processedGif} 
-                  className="bg-white/90 backdrop-blur-sm border-white/20 shadow-xl"
+                <GifGrid
+                  gifs={searchResults.results}
+                  onGifSelect={handleGifSelect}
+                  selectedGifId={searchSelectedGif?.id}
+                  isLoading={isSearchLoading}
+                  error={searchError}
+                  onRetry={() => performSearch(currentQuery)}
                 />
-              )}
+              </div>
+            )}
 
-              {/* Tips Card */}
+            {/* Search Tips */}
+            {!searchResults && !isSearchLoading && (
               <Card className="bg-gradient-to-br from-blue-50 to-purple-50 border-blue-200">
                 <CardHeader className="pb-3">
                   <CardTitle className="text-lg flex items-center gap-2">
                     <Info className="h-5 w-5 text-blue-600" />
-                    Tips
+                    Search Tips
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-2 text-sm text-gray-700">
-                  <p>• Click and drag text overlays to reposition them</p>
-                  <p>• Use the Style tab to customize fonts, colors, and effects</p>
-                  <p>• Add multiple text layers for complex designs</p>
-                  <p>• Preview your changes in real-time on the left</p>
-                  {state.processedGif && <p>• Use the sharing controls to share your creation</p>}
+                  <p>• Search for emotions like "happy", "excited", or "surprised"</p>
+                  <p>• Try reaction terms like "thumbs up", "clapping", or "dancing"</p>
+                  <p>• Look for specific topics like "cats", "dogs", or "food"</p>
+                  <p>• Use simple, descriptive words for best results</p>
                 </CardContent>
               </Card>
-            </div>
-          </div>
-        )}
+            )}
+          </TabsContent>
+
+          {/* Generate Tab */}
+          <TabsContent value="generate" className="space-y-8">
+            {!state.selectedGif ? (
+              <div className="text-center py-16">
+                <Card className="max-w-md mx-auto bg-white/80 backdrop-blur-sm border-white/20">
+                  <CardContent className="p-8">
+                    <div className="mb-6">
+                      <div className="inline-flex p-4 bg-gradient-to-br from-blue-100 to-purple-100 rounded-full mb-4">
+                        <Info className="h-8 w-8 text-blue-600" />
+                      </div>
+                      <h3 className="text-xl font-bold text-gray-900 mb-2">
+                        No GIF Selected
+                      </h3>
+                      <p className="text-gray-600 mb-6">
+                        Please search and select a GIF to get started with text overlays.
+                      </p>
+                      <Button
+                        onClick={() => setActiveTab('search')}
+                        className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+                      >
+                        <Search className="h-4 w-4 mr-2" />
+                        Search GIFs
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            ) : (
+              /* Main Content - Split Screen Layout */
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                {/* Left Panel - GIF Preview */}
+                <div className="space-y-6">
+                  {/* Selected GIF Info */}
+                  <Card className="bg-white/90 backdrop-blur-sm border-white/20 shadow-xl">
+                    <CardContent className="p-4">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className="w-12 h-12 rounded-lg overflow-hidden bg-muted">
+                            <img
+                              src={state.selectedGif.preview}
+                              alt={state.selectedGif.title}
+                              className="w-full h-full object-cover"
+                            />
+                          </div>
+                          <div>
+                            <h3 className="font-semibold text-gray-900 truncate">
+                              {state.selectedGif.title}
+                            </h3>
+                            <p className="text-sm text-gray-600">
+                              {state.selectedGif.width} × {state.selectedGif.height}
+                            </p>
+                          </div>
+                        </div>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setActiveTab('search')}
+                        >
+                          Change GIF
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* GIF Preview Card */}
+                  <Card className="bg-white/90 backdrop-blur-sm border-white/20 shadow-xl">
+                    <CardHeader className="pb-3">
+                      <div className="flex items-center justify-between">
+                        <CardTitle className="text-lg font-semibold bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-transparent">
+                          Preview
+                        </CardTitle>
+                        <div className="flex items-center gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setState(prev => ({ ...prev, isPlaying: !prev.isPlaying }))}
+                            className="h-8 w-8 p-0"
+                          >
+                            {state.isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={handleReset}
+                            className="h-8 w-8 p-0"
+                            disabled={state.isProcessing}
+                          >
+                            <RotateCcw className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    </CardHeader>
+
+                    <CardContent className="space-y-4">
+                      {/* GIF Display with Text Overlays */}
+                      <div 
+                        ref={previewRef}
+                        className="relative aspect-video bg-gradient-to-br from-gray-900 via-purple-900 to-blue-900 rounded-lg overflow-hidden group"
+                        onClick={() => setActiveOverlay(null)}
+                      >
+                        {/* GIF Image */}
+                        <img
+                          src={state.isPlaying ? state.selectedGif.url : state.selectedGif.preview}
+                          alt={state.selectedGif.title}
+                          className="w-full h-full object-contain"
+                        />
+
+                        {/* Text Overlays */}
+                        {overlays.map((overlay) => (
+                          <DraggableText
+                            key={overlay.id}
+                            overlay={overlay}
+                            containerWidth={previewDimensions.width}
+                            containerHeight={previewDimensions.height}
+                            isActive={activeOverlayId === overlay.id}
+                            onPositionChange={(position) => handleOverlayPositionChange(overlay.id, position)}
+                            onSelect={() => setActiveOverlay(overlay.id)}
+                            onDragStart={() => startDragging(overlay.id)}
+                            onDragEnd={() => stopDragging(overlay.id)}
+                          />
+                        ))}
+
+                        {/* Processing Overlay */}
+                        {state.isProcessing && (
+                          <div className="absolute inset-0 bg-black/80 flex items-center justify-center rounded-lg">
+                            <div className="text-center text-white">
+                              <div className="w-16 h-16 mx-auto mb-4 relative">
+                                <Loader2 className="w-16 h-16 animate-spin text-blue-500" />
+                              </div>
+                              <p className="text-lg font-medium mb-2">Processing GIF...</p>
+                              <p className="text-sm text-white/80 mb-4">
+                                {state.processingProgress.stage === 'loading' && 'Loading FFmpeg...'}
+                                {state.processingProgress.stage === 'processing' && 'Adding text overlays...'}
+                                {state.processingProgress.stage === 'encoding' && 'Encoding final GIF...'}
+                                {state.processingProgress.stage === 'complete' && 'Complete!'}
+                              </p>
+                              <Progress 
+                                value={state.processingProgress.progress * 100} 
+                                className="w-48 mx-auto"
+                              />
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Success Animation */}
+                        {state.showSuccessAnimation && (
+                          <div className="absolute inset-0 bg-green-500/20 flex items-center justify-center rounded-lg animate-pulse">
+                            <div className="text-center text-white">
+                              <CheckCircle className="w-16 h-16 mx-auto mb-4 text-green-500 animate-bounce" />
+                              <p className="text-lg font-medium">Success!</p>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* GIF Info */}
+                      <div className="flex items-center justify-between text-sm text-gray-600">
+                        <div className="flex items-center gap-4">
+                          <span>{state.selectedGif.width} × {state.selectedGif.height}</span>
+                          {state.selectedGif.duration && (
+                            <span>{(state.selectedGif.duration / 1000).toFixed(1)}s</span>
+                          )}
+                          <Badge variant="secondary" className="text-xs">
+                            {state.selectedGif.source.toUpperCase()}
+                          </Badge>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span>{overlays.length} text overlay{overlays.length !== 1 ? 's' : ''}</span>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Action Buttons */}
+                  <Card className="bg-white/90 backdrop-blur-sm border-white/20 shadow-xl">
+                    <CardContent className="p-6">
+                      <div className="space-y-4">
+                        {/* Generate Button */}
+                        <Button
+                          onClick={handleProcessGif}
+                          disabled={state.isProcessing || overlays.length === 0}
+                          className="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white py-3"
+                          size="lg"
+                        >
+                          {state.isProcessing ? (
+                            <>
+                              <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                              Processing...
+                            </>
+                          ) : (
+                            <>
+                              <Zap className="mr-2 h-5 w-5" />
+                              Generate GIF
+                            </>
+                          )}
+                        </Button>
+
+                        {/* Download Button */}
+                        {state.processedGif && (
+                          <>
+                            <Separator />
+                            <Button
+                              onClick={handleDownload}
+                              variant="outline"
+                              className="w-full"
+                            >
+                              <Download className="mr-2 h-4 w-4" />
+                              Download GIF
+                            </Button>
+                          </>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Error Alert */}
+                  {state.error && (
+                    <Alert variant="destructive" className="bg-red-50 border-red-200">
+                      <AlertCircle className="h-4 w-4" />
+                      <AlertTitle>Processing Error</AlertTitle>
+                      <AlertDescription>
+                        {state.error}
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={handleProcessGif}
+                          className="mt-2 ml-0"
+                        >
+                          Try Again
+                        </Button>
+                      </AlertDescription>
+                    </Alert>
+                  )}
+                </div>
+
+                {/* Right Panel - Text Overlay Editor */}
+                <div className="space-y-6">
+                  <TextOverlayEditor
+                    overlays={overlays}
+                    activeOverlayId={activeOverlayId}
+                    onOverlayAdd={handleAddOverlay}
+                    onOverlayRemove={removeOverlay}
+                    onOverlayDuplicate={duplicateOverlay}
+                    onOverlayUpdate={updateOverlay}
+                    onActiveOverlayChange={setActiveOverlay}
+                    onOverlayMoveUp={moveOverlayUp}
+                    onOverlayMoveDown={moveOverlayDown}
+                    className="h-[600px]"
+                  />
+
+                  {/* Sharing Controls */}
+                  {state.processedGif && (
+                    <SharingControls 
+                      gif={state.processedGif} 
+                      className="bg-white/90 backdrop-blur-sm border-white/20 shadow-xl"
+                    />
+                  )}
+
+                  {/* Tips Card */}
+                  <Card className="bg-gradient-to-br from-blue-50 to-purple-50 border-blue-200">
+                    <CardHeader className="pb-3">
+                      <CardTitle className="text-lg flex items-center gap-2">
+                        <Info className="h-5 w-5 text-blue-600" />
+                        Tips
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-2 text-sm text-gray-700">
+                      <p>• Click and drag text overlays to reposition them</p>
+                      <p>• Use the Style tab to customize fonts, colors, and effects</p>
+                      <p>• Add multiple text layers for complex designs</p>
+                      <p>• Preview your changes in real-time on the left</p>
+                      {state.processedGif && <p>• Use the sharing controls to share your creation</p>}
+                    </CardContent>
+                  </Card>
+                </div>
+              </div>
+            )}
+          </TabsContent>
+        </Tabs>
 
         {/* Visual Footer Divider */}
         <div className="mt-16 pt-8 border-t border-gradient-to-r from-transparent via-gray-200 to-transparent">
@@ -551,6 +711,31 @@ function GeneratePageContent() {
             <p>Create amazing GIFs with custom text overlays • Powered by FFmpeg WASM</p>
           </div>
         </div>
+
+        {/* Dialogs */}
+        {dialogs.gifEditor.isOpen && dialogs.gifEditor.data && (
+          <GifEditorDialog
+            gif={dialogs.gifEditor.data}
+            isOpen={dialogs.gifEditor.isOpen}
+            onClose={() => closeDialog('gifEditor')}
+            onGifGenerated={handleGifGenerated}
+          />
+        )}
+
+        {dialogs.sharing.isOpen && dialogs.sharing.data && (
+          <SharingDialog
+            gif={dialogs.sharing.data}
+            isOpen={dialogs.sharing.isOpen}
+            onClose={() => closeDialog('sharing')}
+            onShareComplete={(result) => {
+              toast({
+                title: "Share Complete",
+                description: "Your GIF has been shared successfully!",
+              });
+              closeDialog('sharing');
+            }}
+          />
+        )}
       </div>
     </div>
   );

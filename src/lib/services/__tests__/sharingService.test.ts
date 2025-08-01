@@ -8,13 +8,13 @@ import type { ProcessedGif } from '../../types';
 // Mock the utilities
 jest.mock('../../utils/sharingUtils', () => ({
   generateShareId: jest.fn(() => 'mock-share-id-12345'),
-  generateShareUrl: jest.fn((id: string, baseUrl?: string) => `${baseUrl || 'http://localhost:3000'}/shared/${id}`),
+  generateShareUrl: jest.fn((id: string, baseUrl?: string) => `${baseUrl || 'http://localhost:3000'}/generate?shared=${id}`),
   createSocialShareUrls: jest.fn(() => ({
-    twitter: 'https://twitter.com/intent/tweet?text=Mock%20Title&url=http%3A//localhost%3A3000/shared/mock-share-id-12345',
-    facebook: 'https://www.facebook.com/sharer/sharer.php?u=http%3A//localhost%3A3000/shared/mock-share-id-12345',
-    whatsapp: 'https://wa.me/?text=Mock%20Title%20http%3A//localhost%3A3000/shared/mock-share-id-12345',
-    email: 'mailto:?subject=Mock%20Title&body=Mock%20Description%0A%0Ahttp%3A//localhost%3A3000/shared/mock-share-id-12345',
-    reddit: 'https://reddit.com/submit?url=http%3A//localhost%3A3000/shared/mock-share-id-12345&title=Mock%20Title'
+    twitter: 'https://twitter.com/intent/tweet?text=Mock%20Title&url=http%3A//localhost%3A3000/generate%3Fshared%3Dmock-share-id-12345',
+    facebook: 'https://www.facebook.com/sharer/sharer.php?u=http%3A//localhost%3A3000/generate%3Fshared%3Dmock-share-id-12345',
+    whatsapp: 'https://wa.me/?text=Mock%20Title%20http%3A//localhost%3A3000/generate%3Fshared%3Dmock-share-id-12345',
+    email: 'mailto:?subject=Mock%20Title&body=Mock%20Description%0A%0Ahttp%3A//localhost%3A3000/generate%3Fshared%3Dmock-share-id-12345',
+    reddit: 'https://reddit.com/submit?url=http%3A//localhost%3A3000/generate%3Fshared%3Dmock-share-id-12345&title=Mock%20Title'
   })),
   copyToClipboard: jest.fn(() => Promise.resolve(true))
 }));
@@ -64,7 +64,7 @@ describe('SharingService', () => {
 
       expect(result).toEqual({
         id: 'mock-share-id-12345',
-        url: 'http://localhost:3000/shared/mock-share-id-12345',
+        url: 'http://localhost:3000/generate?shared=mock-share-id-12345',
         expiresAt: expect.any(Date),
         viewCount: 0
       });
@@ -109,11 +109,11 @@ describe('SharingService', () => {
       const result = sharingService.generateSocialShareUrls(mockGif);
 
       expect(result).toEqual({
-        twitter: 'https://twitter.com/intent/tweet?text=Mock%20Title&url=http%3A//localhost%3A3000/shared/mock-share-id-12345',
-        facebook: 'https://www.facebook.com/sharer/sharer.php?u=http%3A//localhost%3A3000/shared/mock-share-id-12345',
-        whatsapp: 'https://wa.me/?text=Mock%20Title%20http%3A//localhost%3A3000/shared/mock-share-id-12345',
-        email: 'mailto:?subject=Mock%20Title&body=Mock%20Description%0A%0Ahttp%3A//localhost%3A3000/shared/mock-share-id-12345',
-        reddit: 'https://reddit.com/submit?url=http%3A//localhost%3A3000/shared/mock-share-id-12345&title=Mock%20Title'
+        twitter: 'https://twitter.com/intent/tweet?text=Mock%20Title&url=http%3A//localhost%3A3000/generate%3Fshared%3Dmock-share-id-12345',
+        facebook: 'https://www.facebook.com/sharer/sharer.php?u=http%3A//localhost%3A3000/generate%3Fshared%3Dmock-share-id-12345',
+        whatsapp: 'https://wa.me/?text=Mock%20Title%20http%3A//localhost%3A3000/generate%3Fshared%3Dmock-share-id-12345',
+        email: 'mailto:?subject=Mock%20Title&body=Mock%20Description%0A%0Ahttp%3A//localhost%3A3000/generate%3Fshared%3Dmock-share-id-12345',
+        reddit: 'https://reddit.com/submit?url=http%3A//localhost%3A3000/generate%3Fshared%3Dmock-share-id-12345&title=Mock%20Title'
       });
     });
   });

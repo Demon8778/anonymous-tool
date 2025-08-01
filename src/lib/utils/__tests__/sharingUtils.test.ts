@@ -49,7 +49,7 @@ describe('sharingUtils', () => {
 
   describe('createSocialShareUrls', () => {
     it('should create social media share URLs', () => {
-      const shareUrl = 'https://example.com/shared/abc123';
+      const shareUrl = 'https://example.com/generate?shared=abc123';
       const title = 'My Custom GIF';
       const description = 'A cool GIF with text overlay';
 
@@ -78,14 +78,14 @@ describe('sharingUtils', () => {
     it('should generate share URL with default base URL', () => {
       const shareId = 'abc123';
       const result = generateShareUrl(shareId);
-      expect(result).toMatch(/\/shared\/abc123$/);
+      expect(result).toMatch(/\/generate\?shared=abc123$/);
     });
 
     it('should generate share URL with custom base URL', () => {
       const shareId = 'abc123';
       const baseUrl = 'https://myapp.com';
       const result = generateShareUrl(shareId, baseUrl);
-      expect(result).toBe('https://myapp.com/shared/abc123');
+      expect(result).toBe('https://myapp.com/generate?shared=abc123');
     });
   });
 
@@ -93,11 +93,14 @@ describe('sharingUtils', () => {
     it('should extract share ID from valid URLs', () => {
       expect(extractShareIdFromUrl('https://example.com/shared/abc123')).toBe('abc123');
       expect(extractShareIdFromUrl('http://localhost:3000/shared/xyz789')).toBe('xyz789');
+      expect(extractShareIdFromUrl('https://example.com/generate?shared=abc123')).toBe('abc123');
+      expect(extractShareIdFromUrl('http://localhost:3000/generate?shared=xyz789')).toBe('xyz789');
     });
 
     it('should return null for invalid URLs', () => {
       expect(extractShareIdFromUrl('https://example.com/other/abc123')).toBeNull();
       expect(extractShareIdFromUrl('https://example.com/shared/')).toBeNull();
+      expect(extractShareIdFromUrl('https://example.com/generate')).toBeNull();
       expect(extractShareIdFromUrl('invalid-url')).toBeNull();
     });
   });

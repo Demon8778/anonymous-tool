@@ -68,6 +68,7 @@ function GifCard({ gif, isSelected, onSelect, onError }: GifCardProps) {
   return (
     <GifErrorBoundary type="display" onError={(error) => onError?.(gif, error)}>
       <Card 
+        data-gif-id={gif.id}
         className={cn(
           "group cursor-pointer transition-all duration-300 hover-lift focus-ring touch-manipulation",
           isSelected 
@@ -255,7 +256,7 @@ export function GifGrid({
     <div className={cn("w-full", className)}>
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 gap-responsive">
         {/* Loading skeletons */}
-        {isLoading && gifs.length === 0 && (
+        {isLoading && gifs?.length === 0 && (
           <>
             {Array.from({ length: 12 }).map((_, index) => (
               <LoadingSkeleton key={`skeleton-${index}`} />
@@ -264,7 +265,7 @@ export function GifGrid({
         )}
 
         {/* GIF cards with staggered animation */}
-        {gifs.map((gif, index) => (
+        {gifs?.map((gif, index) => (
           <div
             key={gif.id}
             className="animate-fade-in"
@@ -282,7 +283,7 @@ export function GifGrid({
         ))}
 
         {/* Additional loading skeletons when loading more */}
-        {isLoading && gifs.length > 0 && (
+        {isLoading && gifs?.length > 0 && (
           <>
             {Array.from({ length: 6 }).map((_, index) => (
               <LoadingSkeleton key={`loading-more-${index}`} />
@@ -292,7 +293,7 @@ export function GifGrid({
       </div>
 
       {/* Enhanced empty state */}
-      {!isLoading && gifs.length === 0 && !error && (
+      {!isLoading && gifs?.length === 0 && !error && (
         <div className="text-center py-16 animate-fade-in">
           <div className="mb-6">
             <div className="inline-flex p-6 bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-900 rounded-full mb-4 animate-float">

@@ -339,6 +339,15 @@
     background-color: hsl(var(--muted-foreground) / 0.5);
   }
 
+  .scrollbar-hide {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+
   /* Enhanced safe area utilities for mobile */
   .safe-top {
     padding-top: max(env(safe-area-inset-top), 1rem);

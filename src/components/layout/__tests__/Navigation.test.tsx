@@ -12,9 +12,7 @@ describe('Navigation', () => {
     
     expect(screen.getAllByText('GIF Generator')).toHaveLength(2); // Desktop and mobile
     expect(screen.getByText('Home')).toBeInTheDocument();
-    expect(screen.getByText('Search')).toBeInTheDocument();
     expect(screen.getByText('Generate')).toBeInTheDocument();
-    expect(screen.getByText('Shared')).toBeInTheDocument();
   });
 
   it('shows mobile menu button', () => {

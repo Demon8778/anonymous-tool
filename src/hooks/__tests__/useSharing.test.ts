@@ -49,7 +49,7 @@ describe('useSharing', () => {
       success: true,
       data: {
         id: 'share-123',
-        url: 'https://example.com/shared/share-123',
+        url: 'https://example.com/generate?shared=share-123',
         expiresAt: new Date(),
         viewCount: 0,
       },

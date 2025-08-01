@@ -44,15 +44,21 @@ export function createSocialShareUrls(
  */
 export function generateShareUrl(shareId: string, baseUrl?: string): string {
   const base = baseUrl || (typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000');
-  return `${base}/shared/${shareId}`;
+  return `${base}/generate?shared=${shareId}`;
 }
 
 /**
  * Extract share ID from a share URL
  */
 export function extractShareIdFromUrl(url: string): string | null {
-  const match = url.match(/\/shared\/([a-z0-9]+)$/);
-  return match ? match[1] : null;
+  // Handle both old format (/shared/id) and new format (/generate?shared=id)
+  const oldFormatMatch = url.match(/\/shared\/([a-z0-9]+)$/);
+  if (oldFormatMatch) {
+    return oldFormatMatch[1];
+  }
+  
+  const newFormatMatch = url.match(/\/generate\?.*shared=([a-z0-9]+)/);
+  return newFormatMatch ? newFormatMatch[1] : null;
 }
 
 /**

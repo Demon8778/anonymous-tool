@@ -83,7 +83,7 @@ export default function Home() {
               Transform any GIF into a personalized masterpiece. Search millions of GIFs, add custom text overlays, and share your creations instantly with our powerful tools.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-16">
-              <Link href="/search">
+              <Link href="/generate">
                 <Button 
                   size="lg" 
                   className="hover:scale-105 text-lg px-8 py-4 rounded-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-300 group"
@@ -216,7 +216,7 @@ export default function Home() {
           </div>
           
           <div className="text-center">
-            <Link href="/search">
+            <Link href="/generate">
               <Button size="lg" className="px-8 py-4 rounded-lg font-semibold shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300 group">
                 <Search className="h-5 w-5 mr-2 group-hover:rotate-12 transition-transform" />
                 Browse All GIFs
@@ -301,7 +301,7 @@ export default function Home() {
               Join thousands of creators who are already making stunning GIFs with our powerful tools
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12">
-              <Link href="/search">
+              <Link href="/generate">
                 <Button 
                   size="lg" 
                   variant="secondary"
@@ -377,9 +377,7 @@ export default function Home() {
               <h3 className="text-lg font-semibold mb-4 text-foreground">Quick Links</h3>
               <div className="space-y-2">
                 {[
-                  { name: "Search GIFs", href: "/search" },
-                  { name: "Generate", href: "/generate" },
-                  { name: "Shared GIFs", href: "/shared" },
+                  { name: "Generate GIFs", href: "/generate" },
                 ].map((link) => (
                   <Link 
                     key={link.name}

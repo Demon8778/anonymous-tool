@@ -3,15 +3,15 @@ import { Breadcrumbs } from '../Breadcrumbs';
 
 // Mock Next.js router
 jest.mock('next/navigation', () => ({
-  usePathname: () => '/search',
+  usePathname: () => '/generate',
 }));
 
 describe('Breadcrumbs', () => {
-  it('renders breadcrumbs for search page', () => {
+  it('renders breadcrumbs for generate page', () => {
     render(<Breadcrumbs />);
     
     expect(screen.getByText('Home')).toBeInTheDocument();
-    expect(screen.getByText('Search GIFs')).toBeInTheDocument();
+    expect(screen.getByText('Generate GIF')).toBeInTheDocument();
   });
 
   it('does not render on home page', () => {

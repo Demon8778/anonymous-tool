@@ -23,9 +23,7 @@ interface BreadcrumbsProps {
 
 const routeLabels: Record<string, string> = {
   "/": "Home",
-  "/search": "Search GIFs",
   "/generate": "Generate GIF",
-  "/shared": "Shared GIFs",
 };
 
 interface BreadcrumbItem {

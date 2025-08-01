@@ -34,22 +34,10 @@ const navigationItems = [
     icon: Sparkles,
   },
   {
-    title: "Search",
-    href: "/search",
-    description: "Find the perfect GIF",
-    icon: Search,
-  },
-  {
     title: "Generate",
     href: "/generate",
-    description: "Create custom GIFs with text",
+    description: "Search, customize, and create GIFs",
     icon: Wand2,
-  },
-  {
-    title: "Shared",
-    href: "/shared",
-    description: "View shared GIFs",
-    icon: Share2,
   },
 ];
 
