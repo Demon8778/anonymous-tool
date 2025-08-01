@@ -304,14 +304,14 @@ export default function Home() {
               <p className="text-muted-foreground leading-relaxed mb-6 max-w-md">
                 Create stunning animated GIFs with custom text overlays. The most powerful and easy-to-use GIF generator on the web.
               </p>
-              <div className="flex gap-4">
+              {/* <div className="flex gap-4">
                 {stats.slice(0, 2).map((stat, index) => (
                   <div key={index} className="text-center p-3 rounded-lg bg-background/50">
                     <div className="text-2xl font-bold text-foreground">{stat.value}</div>
                     <div className="text-sm text-muted-foreground">{stat.label}</div>
                   </div>
                 ))}
-              </div>
+              </div> */}
             </div>
 
             {/* Quick Links */}
@@ -354,14 +354,14 @@ export default function Home() {
           {/* Bottom Bar */}
           <div className="border-t border-border pt-8 flex flex-col md:flex-row justify-between items-center">
             <div className="text-muted-foreground text-sm mb-4 md:mb-0">
-              © 2024 GIF Generator. Made with ❤️ for creators everywhere.
+              © 2025 GIF Generator. Made with ❤️ for creators everywhere.
             </div>
-            <div className="flex items-center gap-1 text-primary">
+            {/* <div className="flex items-center gap-1 text-primary">
               {[...Array(5)].map((_, i) => (
                 <Star key={i} className="h-4 w-4 fill-current" />
               ))}
               <span className="text-sm text-muted-foreground ml-2">Rated 4.9/5 by users</span>
-            </div>
+            </div> */}
           </div>
         </div>
 
