@@ -106,7 +106,7 @@ function GifCard({ gif, isSelected, onSelect, onError }: GifCardProps) {
         onMouseLeave={() => setIsHovered(false)}
         onClick={handleSelect}
       >
-      <CardContent className="p-0 relative overflow-hidden rounded-lg">
+      <CardContent className="p-0 h-full relative overflow-hidden rounded-lg">
         {imageError ? (
           <div className="aspect-square bg-gradient-to-br from-muted/50 to-muted/30 flex items-center justify-center animate-fade-in">
             <div className="text-center text-muted-foreground">
@@ -141,7 +141,7 @@ function GifCard({ gif, isSelected, onSelect, onError }: GifCardProps) {
               )}
               
               {/* Enhanced overlay controls */}
-              <div className={cn(
+              {/* <div className={cn(
                 "absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent flex items-center justify-center transition-all duration-300",
                 isHovered ? 'opacity-100' : 'opacity-0'
               )}>
@@ -157,7 +157,7 @@ function GifCard({ gif, isSelected, onSelect, onError }: GifCardProps) {
                     <Play className="h-4 w-4" />
                   )}
                 </Button>
-              </div>
+              </div> */}
 
               {/* Enhanced selection indicator */}
               {isSelected && (
@@ -187,12 +187,12 @@ function GifCard({ gif, isSelected, onSelect, onError }: GifCardProps) {
               <h3 className="text-sm font-medium text-foreground truncate group-hover:text-primary transition-colors duration-200" title={gif.title}>
                 {gif.title}
               </h3>
-              <div className="flex items-center justify-between text-xs text-muted-foreground">
+              {/* <div className="flex items-center justify-between text-xs text-muted-foreground">
                 <span className="font-mono">{gif.width} × {gif.height}</span>
                 {gif.duration && (
                   <span className="font-mono">{(gif.duration / 1000).toFixed(1)}s</span>
                 )}
-              </div>
+              </div> */}
             </div>
           </>
         )}
@@ -338,10 +338,6 @@ export function GifGrid({
               <div
                 key={gif.id}
                 ref={enableInfiniteScroll && isLastItem ? lastElementRef : undefined}
-                className="animate-fade-in"
-                style={{
-                  animationDelay: `${Math.min(index * 0.05, 1)}s`,
-                }}
               >
                 <GifCard
                   gif={gif}

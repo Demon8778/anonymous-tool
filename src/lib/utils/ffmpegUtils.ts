@@ -69,6 +69,20 @@ export class FFmpegProcessor {
     };
   }
 
+  private async loadFonts(requiredFonts: string[]): Promise<void> {
+    const uniqueFonts = [...new Set(requiredFonts)];
+    await Promise.all(
+      uniqueFonts.map(async (fontFile) => {
+        try {
+          const fontData = await fetchFile(`/fonts/${fontFile}`);
+          await this.ffmpeg?.writeFile(fontFile, fontData);
+        } catch (err) {
+          console.warn(`Font ${fontFile} could not be loaded`, err);
+        }
+      })
+    );
+  }
+
   /**
    * Initialize FFmpeg WASM with core and worker modules
    */
@@ -96,10 +110,10 @@ export class FFmpegProcessor {
           `${FFMPEG_CONFIG.baseURL}/${FFMPEG_CONFIG.coreWasm}`,
           'application/wasm'
         ),
-        workerURL: await toBlobURL(
-          `${FFMPEG_CONFIG.baseURL}/${FFMPEG_CONFIG.workerJS}`,
-          'text/javascript'
-        ),
+        // workerURL: await toBlobURL(
+        //   `${FFMPEG_CONFIG.baseURL}/${FFMPEG_CONFIG.workerJS}`,
+        //   'text/javascript'
+        // ),
       });
 
       // Add timeout to initialization
@@ -331,48 +345,47 @@ export class FFmpegProcessor {
 
   private generateTextFilters(overlays: TextOverlay[]): string {
     const activeOverlays = overlays.filter(overlay => overlay.text && overlay.text.trim());
-    
+  
     if (activeOverlays.length === 0) {
       return 'null'; // No text overlays to apply
     }
-
-    const filters = activeOverlays.map((overlay, index) => {
+  
+    const cleanHex = (hex?: string) => hex?.replace(/^#/, '') ?? 'ffffff';
+  
+    const filters = activeOverlays.map((overlay) => {
       const x = `${overlay.position.x}*w/100`;
       const y = `${overlay.position.y}*h/100`;
-      
-      // Escape special characters in text
+  
       const escapedText = escapeTextForFFmpeg(overlay.text);
-      
-      // Build drawtext filter with all styling options
+  
+      // Map font families to font files
+      const fontMap: Record<string, { regular: string; bold: string }> = {
+        'Inter': { regular: 'Inter-Regular.ttf', bold: 'Inter-Bold.ttf' },
+        'Roboto': { regular: 'Roboto-Regular.ttf', bold: 'Roboto-Bold.ttf' },
+        'Open Sans': { regular: 'OpenSans-Regular.ttf', bold: 'OpenSans-Bold.ttf' },
+        'Arial': { regular: 'Arial.ttf', bold: 'Arial-Bold.ttf' } // Assuming you've added these files
+      };
+  
+      const fontFamily = overlay.style.fontFamily || 'Arial';
+      const fontEntry = fontMap[fontFamily] || fontMap['Arial'];
+      const isBold = overlay.style.fontWeight === 'bold';
+      const fontFile = isBold ? fontEntry.bold : fontEntry.regular;
+  
       const drawTextOptions = [
         `text='${escapedText}'`,
         `x=${x}`,
         `y=${y}`,
         `fontsize=${overlay.style.fontSize || TEXT_OVERLAY_DEFAULTS.fontSize}`,
-        `fontcolor=${overlay.style.color || TEXT_OVERLAY_DEFAULTS.fontColor}`,
-        `bordercolor=${overlay.style.strokeColor || TEXT_OVERLAY_DEFAULTS.borderColor}`,
+        `fontcolor=${cleanHex(overlay.style.color || TEXT_OVERLAY_DEFAULTS.fontColor)}`,
+        `bordercolor=${cleanHex(overlay.style.strokeColor || TEXT_OVERLAY_DEFAULTS.borderColor)}`,
         `borderw=${overlay.style.strokeWidth || TEXT_OVERLAY_DEFAULTS.borderWidth}`,
-        `alpha=${overlay.style.opacity || TEXT_OVERLAY_DEFAULTS.alpha}`,
+        `alpha=${overlay.style.opacity ?? TEXT_OVERLAY_DEFAULTS.alpha}`,
+        `fontfile=${fontFile}`
       ];
-
-      // Add font weight if specified
-      if (overlay.style.fontWeight === 'bold') {
-        drawTextOptions.push('fontweight=bold');
-      }
-
-      // Add text alignment
-      if (overlay.style.textAlign) {
-        const alignMap = {
-          'left': 'left',
-          'center': 'center',
-          'right': 'right',
-        };
-        drawTextOptions.push(`text_align=${alignMap[overlay.style.textAlign]}`);
-      }
-
+  
       return `drawtext=${drawTextOptions.join(':')}`;
     });
-
+  
     return filters.join(',');
   }
 

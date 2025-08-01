@@ -472,7 +472,7 @@
   }
 
   .gap-responsive {
-    @apply gap-4 sm:gap-6 md:gap-8;
+    @apply gap-x-4 sm:gap-x-6 md:gap-x-8 gap-y-2 sm:gap-y-3 md:gap-y-4;
   }
 
   .p-responsive {

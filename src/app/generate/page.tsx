@@ -371,8 +371,8 @@ function GeneratePageContent() {
                                     error={searchError}
                                     onRetry={() => performSearch(currentQuery)}
                                     enableInfiniteScroll={true}
-                                    defaultLayoutMode="masonry"
-                                    showLayoutToggle={true}
+                                    defaultLayoutMode="grid"
+                                    showLayoutToggle={false}
                                 />
                             </div>
                         )}
@@ -409,209 +409,134 @@ function GeneratePageContent() {
                             /* Main Content - Split Screen Layout */
                             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                                 {/* Left Panel - GIF Preview */}
-                                <div className="space-y-6">
-                                    {/* Selected GIF Info */}
-                                    <Card className="bg-card/90 backdrop-blur-sm border-border/20 shadow-xl">
-                                        <CardContent className="p-4">
-                                            <div className="flex items-center justify-between">
-                                                <div className="flex items-center gap-3">
-                                                    <div className="w-12 h-12 rounded-lg overflow-hidden bg-muted">
-                                                        <img
-                                                            src={state.selectedGif.preview}
-                                                            alt={state.selectedGif.title}
-                                                            className="w-full h-full object-cover"
-                                                        />
-                                                    </div>
-                                                    <div>
-                                                        <h3 className="font-semibold text-foreground truncate">
-                                                            {state.selectedGif.title}
-                                                        </h3>
-                                                        <p className="text-sm text-muted-foreground">
-                                                            {state.selectedGif.width} × {state.selectedGif.height}
-                                                        </p>
-                                                    </div>
-                                                </div>
-                                                <Button
-                                                    variant="outline"
-                                                    size="sm"
-                                                    onClick={() => setActiveTab('search')}
-                                                >
-                                                    Change GIF
-                                                </Button>
-                                            </div>
-                                        </CardContent>
-                                    </Card>
+                                {/* Left Panel - Combined Preview + Actions */}
+<div className="space-y-6">
+  <Card className="bg-card/90 backdrop-blur-sm border-border/20 shadow-xl">
+    <CardHeader className="pb-3">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div className="w-12 h-12 rounded-lg overflow-hidden bg-muted">
+            <img
+              src={state.selectedGif.preview}
+              alt={state.selectedGif.title}
+              className="w-full h-full object-cover"
+            />
+          </div>
+          <div>
+            <h3 className="font-semibold text-foreground truncate">
+              {state.selectedGif.title}
+            </h3>
+            <p className="text-sm text-muted-foreground">
+              {state.selectedGif.width} × {state.selectedGif.height}
+            </p>
+          </div>
+        </div>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => setActiveTab('search')}
+        >
+          Change GIF
+        </Button>
+      </div>
+    </CardHeader>
 
-                                    {/* GIF Preview Card */}
-                                    <Card className="bg-card/90 backdrop-blur-sm border-border/20 shadow-xl">
-                                        <CardHeader className="pb-3">
-                                            <div className="flex items-center justify-between">
-                                                <CardTitle className="text-lg font-semibold bg-gradient-to-r from-foreground to-foreground/60 bg-clip-text text-transparent">
-                                                    Preview
-                                                </CardTitle>
-                                                <div className="flex items-center gap-2">
-                                                    <Button
-                                                        variant="outline"
-                                                        size="sm"
-                                                        onClick={() => setState(prev => ({ ...prev, isPlaying: !prev.isPlaying }))}
-                                                        className="h-8 w-8 p-0"
-                                                    >
-                                                        {state.isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
-                                                    </Button>
-                                                    <Button
-                                                        variant="outline"
-                                                        size="sm"
-                                                        onClick={handleReset}
-                                                        className="h-8 w-8 p-0"
-                                                        disabled={state.isProcessing}
-                                                    >
-                                                        <RotateCcw className="h-4 w-4" />
-                                                    </Button>
-                                                </div>
-                                            </div>
-                                        </CardHeader>
+    <CardContent className="space-y-4">
+      {/* GIF Display */}
+      <div
+        ref={previewRef}
+        className="relative aspect-video bg-muted rounded-lg overflow-hidden group"
+        onClick={() => setActiveOverlay(null)}
+      >
+        <img
+          src={state.isPlaying ? state.selectedGif.url : state.selectedGif.preview}
+          alt={state.selectedGif.title}
+          className="w-full h-full object-contain"
+        />
+        {/* Text Overlays */}
+        {overlays.map((overlay) => (
+          <DraggableText
+            key={overlay.id}
+            overlay={overlay}
+            containerWidth={previewDimensions.width}
+            containerHeight={previewDimensions.height}
+            isActive={activeOverlayId === overlay.id}
+            onPositionChange={(pos) => handleOverlayPositionChange(overlay.id, pos)}
+            onSelect={() => setActiveOverlay(overlay.id)}
+            onDragStart={() => startDragging(overlay.id)}
+            onDragEnd={() => stopDragging(overlay.id)}
+          />
+        ))}
+        {/* Processing Overlay */}
+        {state.isProcessing && (
+          <div className="absolute inset-0 bg-background/80 flex items-center justify-center rounded-lg">
+            <div className="text-center text-foreground">
+              <Loader2 className="w-16 h-16 mx-auto mb-4 animate-spin text-primary" />
+              <p className="text-lg font-medium mb-2">Processing GIF...</p>
+              <p className="text-sm text-muted-foreground mb-4">
+                {state.processingProgress.stage === 'loading' && 'Loading FFmpeg...'}
+                {state.processingProgress.stage === 'processing' && 'Adding text overlays...'}
+                {state.processingProgress.stage === 'encoding' && 'Encoding final GIF...'}
+              </p>
+              <Progress
+                value={state.processingProgress.progress * 100}
+                className="w-48 mx-auto"
+              />
+            </div>
+          </div>
+        )}
+        {/* Success Animation */}
+        {state.showSuccessAnimation && (
+          <div className="absolute inset-0 bg-primary/20 flex items-center justify-center rounded-lg animate-pulse">
+            <CheckCircle className="w-16 h-16 text-primary animate-bounce" />
+          </div>
+        )}
+      </div>
 
-                                        <CardContent className="space-y-4">
-                                            {/* GIF Display with Text Overlays */}
-                                            <div
-                                                ref={previewRef}
-                                                className="relative aspect-video bg-gradient-to-br from-muted via-muted/80 to-muted/60 rounded-lg overflow-hidden group"
-                                                onClick={() => setActiveOverlay(null)}
-                                            >
-                                                {/* GIF Image */}
-                                                <img
-                                                    src={state.isPlaying ? state.selectedGif.url : state.selectedGif.preview}
-                                                    alt={state.selectedGif.title}
-                                                    className="w-full h-full object-contain"
-                                                />
+      {/* Action Buttons */}
+      <div className="flex gap-2">
+        <Button
+          onClick={handleProcessGif}
+          disabled={state.isProcessing || overlays.length === 0}
+          className="flex-1 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 py-3"
+        >
+          {state.isProcessing ? (
+            <>
+              <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+              Processing...
+            </>
+          ) : (
+            <>
+              <Zap className="mr-2 h-5 w-5" />
+              Generate GIF
+            </>
+          )}
+        </Button>
+        {state.processedGif && (
+          <Button onClick={handleDownload} variant="outline" className="flex-1 py-3">
+            <Download className="mr-2 h-5 w-5" />
+            Download
+          </Button>
+        )}
+      </div>
 
-                                                {/* Text Overlays */}
-                                                {overlays.map((overlay) => (
-                                                    <DraggableText
-                                                        key={overlay.id}
-                                                        overlay={overlay}
-                                                        containerWidth={previewDimensions.width}
-                                                        containerHeight={previewDimensions.height}
-                                                        isActive={activeOverlayId === overlay.id}
-                                                        onPositionChange={(position) => handleOverlayPositionChange(overlay.id, position)}
-                                                        onSelect={() => setActiveOverlay(overlay.id)}
-                                                        onDragStart={() => startDragging(overlay.id)}
-                                                        onDragEnd={() => stopDragging(overlay.id)}
-                                                    />
-                                                ))}
+      {/* Error Alert */}
+      {state.error && (
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>Processing Error</AlertTitle>
+          <AlertDescription className="flex flex-col gap-2">
+            {state.error}
+            <Button onClick={handleProcessGif} variant="outline" size="sm">
+              Try Again
+            </Button>
+          </AlertDescription>
+        </Alert>
+      )}
+    </CardContent>
+  </Card>
+</div>
 
-                                                {/* Processing Overlay */}
-                                                {state.isProcessing && (
-                                                    <div className="absolute inset-0 bg-background/80 flex items-center justify-center rounded-lg">
-                                                        <div className="text-center text-foreground">
-                                                            <div className="w-16 h-16 mx-auto mb-4 relative">
-                                                                <Loader2 className="w-16 h-16 animate-spin text-primary" />
-                                                            </div>
-                                                            <p className="text-lg font-medium mb-2">Processing GIF...</p>
-                                                            <p className="text-sm text-muted-foreground mb-4">
-                                                                {state.processingProgress.stage === 'loading' && 'Loading FFmpeg...'}
-                                                                {state.processingProgress.stage === 'processing' && 'Adding text overlays...'}
-                                                                {state.processingProgress.stage === 'encoding' && 'Encoding final GIF...'}
-                                                                {state.processingProgress.stage === 'complete' && 'Complete!'}
-                                                            </p>
-                                                            <Progress
-                                                                value={state.processingProgress.progress * 100}
-                                                                className="w-48 mx-auto"
-                                                            />
-                                                        </div>
-                                                    </div>
-                                                )}
-
-                                                {/* Success Animation */}
-                                                {state.showSuccessAnimation && (
-                                                    <div className="absolute inset-0 bg-primary/20 flex items-center justify-center rounded-lg animate-pulse">
-                                                        <div className="text-center text-foreground">
-                                                            <CheckCircle className="w-16 h-16 mx-auto mb-4 text-primary animate-bounce" />
-                                                            <p className="text-lg font-medium">Success!</p>
-                                                        </div>
-                                                    </div>
-                                                )}
-                                            </div>
-
-                                            {/* GIF Info */}
-                                            <div className="flex items-center justify-between text-sm text-muted-foreground">
-                                                <div className="flex items-center gap-4">
-                                                    <span>{state.selectedGif.width} × {state.selectedGif.height}</span>
-                                                    {state.selectedGif.duration && (
-                                                        <span>{(state.selectedGif.duration / 1000).toFixed(1)}s</span>
-                                                    )}
-                                                    <Badge variant="secondary" className="text-xs">
-                                                        {state.selectedGif.source.toUpperCase()}
-                                                    </Badge>
-                                                </div>
-                                                <div className="flex items-center gap-2">
-                                                    <span>{overlays.length} text overlay{overlays.length !== 1 ? 's' : ''}</span>
-                                                </div>
-                                            </div>
-                                        </CardContent>
-                                    </Card>
-
-                                    {/* Action Buttons */}
-                                    <Card className="bg-card/90 backdrop-blur-sm border-border/20 shadow-xl">
-                                        <CardContent className="p-6">
-                                            <div className="space-y-4">
-                                                {/* Generate Button */}
-                                                <Button
-                                                    onClick={handleProcessGif}
-                                                    disabled={state.isProcessing || overlays.length === 0}
-                                                    className="w-full bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-primary-foreground py-3"
-                                                    size="lg"
-                                                >
-                                                    {state.isProcessing ? (
-                                                        <>
-                                                            <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                                                            Processing...
-                                                        </>
-                                                    ) : (
-                                                        <>
-                                                            <Zap className="mr-2 h-5 w-5" />
-                                                            Generate GIF
-                                                        </>
-                                                    )}
-                                                </Button>
-
-                                                {/* Download Button */}
-                                                {state.processedGif && (
-                                                    <>
-                                                        <Separator />
-                                                        <Button
-                                                            onClick={handleDownload}
-                                                            variant="outline"
-                                                            className="w-full"
-                                                        >
-                                                            <Download className="mr-2 h-4 w-4" />
-                                                            Download GIF
-                                                        </Button>
-                                                    </>
-                                                )}
-                                            </div>
-                                        </CardContent>
-                                    </Card>
-
-                                    {/* Error Alert */}
-                                    {state.error && (
-                                        <Alert variant="destructive">
-                                            <AlertCircle className="h-4 w-4" />
-                                            <AlertTitle>Processing Error</AlertTitle>
-                                            <AlertDescription>
-                                                {state.error}
-                                                <Button
-                                                    variant="outline"
-                                                    size="sm"
-                                                    onClick={handleProcessGif}
-                                                    className="mt-2 ml-0"
-                                                >
-                                                    Try Again
-                                                </Button>
-                                            </AlertDescription>
-                                        </Alert>
-                                    )}
-                                </div>
 
                                 {/* Right Panel - Text Overlay Editor */}
                                 <div className="space-y-6">
