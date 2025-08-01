@@ -3,7 +3,6 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
 import { Navigation } from "@/components/layout/Navigation";
-import { Breadcrumbs } from "@/components/layout/Breadcrumbs";
 import { ErrorBoundary } from "@/components/error/ErrorBoundary";
 import { ThemeProvider } from "@/components/theme-provider";
 
@@ -18,18 +17,18 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "GIF Generator - Create Amazing GIFs with Text Overlays",
-  description: "Create stunning animated GIFs with custom text overlays. Search, customize, and share your creations with our powerful GIF generator.",
-  keywords: ["GIF generator", "text overlay", "animated GIFs", "meme generator", "custom GIFs", "social media"],
-  authors: [{ name: "GIF Generator Team" }],
+  title: "CompressVerse - Create Amazing GIFs with Text Overlays",
+  description: "Create stunning animated GIFs with custom text overlays. Search, customize, and share your creations with our powerful tools by CompressVerse.",
+  keywords: ["CompressVerse", "GIF generator", "text overlay", "animated GIFs", "meme generator", "custom GIFs", "social media"],
+  authors: [{ name: "CompressVerse Team" }],
   openGraph: {
-    title: "GIF Generator - Create Amazing GIFs with Text Overlays",
+    title: "CompressVerse - Create Amazing GIFs with Text Overlays",
     description: "Create stunning animated GIFs with custom text overlays",
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: "GIF Generator - Create Amazing GIFs with Text Overlays",
+    title: "CompressVerse - Create Amazing GIFs with Text Overlays",
     description: "Create stunning animated GIFs with custom text overlays",
   },
 };

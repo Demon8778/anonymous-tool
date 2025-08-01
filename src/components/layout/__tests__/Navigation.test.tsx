@@ -10,7 +10,7 @@ describe('Navigation', () => {
   it('renders navigation items', () => {
     render(<Navigation />);
     
-    expect(screen.getAllByText('GIF Generator')).toHaveLength(2); // Desktop and mobile
+    expect(screen.getAllByText('CompressVerse')).toHaveLength(2); // Desktop and mobile
     expect(screen.getByText('Home')).toBeInTheDocument();
     expect(screen.getByText('Generate')).toBeInTheDocument();
   });

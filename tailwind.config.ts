@@ -52,7 +52,7 @@ const config: Config = {
   				'4': 'hsl(var(--chart-4))',
   				'5': 'hsl(var(--chart-5))'
   			},
-  			// Custom gradient colors for GIF generator
+  			// Custom gradient colors for CompressVerse
   			gradient: {
   				primary: {
   					from: 'hsl(var(--gradient-primary-from))',

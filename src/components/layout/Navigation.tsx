@@ -25,12 +25,13 @@ import {
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import Image from "next/image";
 
 const navigationItems = [
   {
     title: "Home",
     href: "/",
-    description: "Welcome to GIF Generator",
+    description: "Welcome to CompressVerse",
     icon: Sparkles,
   },
   {
@@ -51,9 +52,9 @@ export function Navigation() {
         {/* Logo */}
         <div className="mr-4 hidden md:flex">
           <Link href="/" className="mr-6 flex items-center space-x-2 group transition-all duration-300 hover:scale-105">
-            <Sparkles className="h-6 w-6 text-primary group-hover:rotate-12 transition-transform duration-300" />
+            <Image src="/logo.svg" alt="Logo" width={40} height={40}/>
             <span className="hidden font-bold sm:inline-block bg-gradient-to-r from-primary via-primary to-primary/60 bg-clip-text text-transparent group-hover:from-primary/80 group-hover:to-primary transition-all duration-300">
-              GIF Generator
+              CompressKit
             </span>
           </Link>
         </div>
@@ -101,7 +102,7 @@ export function Navigation() {
               <SheetTitle className="flex items-center space-x-2 group">
                 <Sparkles className="h-6 w-6 text-primary group-hover:rotate-12 transition-transform duration-300" />
                 <span className="bg-gradient-to-r from-primary via-primary to-primary/60 bg-clip-text text-transparent">
-                  GIF Generator
+                  CompressKit
                 </span>
               </SheetTitle>
               <SheetDescription className="text-responsive-sm">
@@ -118,7 +119,7 @@ export function Navigation() {
             <Link href="/" className="flex items-center space-x-2 md:hidden group transition-all duration-300 hover:scale-105 focus-ring rounded-md p-1">
               <Sparkles className="h-6 w-6 text-primary group-hover:rotate-12 transition-transform duration-300" />
               <span className="font-bold bg-gradient-to-r from-primary via-primary to-primary/60 bg-clip-text text-transparent group-hover:from-primary/80 group-hover:to-primary transition-all duration-300">
-                GIF Generator
+                CompressKit
               </span>
             </Link>
           </div>

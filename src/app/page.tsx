@@ -23,6 +23,7 @@ import {
   LayoutGrid
 } from "lucide-react";
 import CategoryCarousel from "@/components/gif/CategoryCarousel";
+import Image from "next/image";
 
 export default function Home() {
   const router = useRouter();
@@ -294,11 +295,14 @@ export default function Home() {
             {/* Brand */}
             <div className="md:col-span-2">
               <div className="flex items-center gap-2 mb-4">
-                <div className="w-10 h-10 bg-gradient-to-br from-primary to-primary/80 rounded-lg flex items-center justify-center">
-                  <Sparkles className="h-6 w-6 text-primary-foreground" />
+                <div className="w-10 h-10 rounded-lg flex items-center justify-center">
+                  {/* <Sparkles className="h-6 w-6 text-primary-foreground" /> */}
+                  <div className="font-primary">
+                  <Image src="/logo.svg" alt="Logo" width={40} height={40}/>
+                  </div>
                 </div>
                 <span className="text-2xl font-bold text-foreground">
-                  GIF Generator
+                CompressVerse
                 </span>
               </div>
               <p className="text-muted-foreground leading-relaxed mb-6 max-w-md">
@@ -354,7 +358,7 @@ export default function Home() {
           {/* Bottom Bar */}
           <div className="border-t border-border pt-8 flex flex-col md:flex-row justify-between items-center">
             <div className="text-muted-foreground text-sm mb-4 md:mb-0">
-              © 2025 GIF Generator. Made with ❤️ for creators everywhere.
+              © 2025 CompressVerse. Made with ❤️ for creators everywhere.
             </div>
             {/* <div className="flex items-center gap-1 text-primary">
               {[...Array(5)].map((_, i) => (
