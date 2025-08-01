@@ -4,6 +4,10 @@
 
 import { tenorClient, giphyClient } from '../utils/apiClient';
 import { API_CONFIG } from '../constants/api';
+import { handleApiError } from '../utils/errorHandler';
+import { validateSearchQuery, sanitizeSearchQuery } from '../utils/validation';
+import { searchResultsCache, gifMetadataCache, createCacheKey } from '../utils/cache';
+import { retryWithBackoff, retryConditions, circuitBreakers } from '../utils/retryUtils';
 import type { Gif, SearchResult } from '../types/gif';
 import type { GifSearchService, ApiError } from '../types/api';
 
@@ -53,10 +57,19 @@ export class GifSearchServiceImpl implements GifSearchService {
   }
 
   /**
-   * Search for GIFs using multiple providers with fallback
+   * Search for GIFs using multiple providers with fallback and caching
    */
   async searchGifs(query: string, options: SearchOptions = {}): Promise<SearchResult> {
-    const sanitizedQuery = this.sanitizeQuery(query);
+    // Validate and sanitize query
+    const validation = validateSearchQuery(query);
+    if (!validation.isValid) {
+      throw handleApiError(new Error(validation.errors[0]), {
+        component: 'GifSearchService',
+        action: 'searchGifs',
+      });
+    }
+
+    const sanitizedQuery = sanitizeSearchQuery(query);
 
     const {
       limit = API_CONFIG.TENOR.DEFAULT_LIMIT,
@@ -68,13 +81,39 @@ export class GifSearchServiceImpl implements GifSearchService {
     // Validate limit
     const validatedLimit = Math.min(Math.max(1, limit), API_CONFIG.TENOR.MAX_LIMIT);
 
+    // Create cache key
+    const cacheKey = createCacheKey('search', sanitizedQuery, validatedLimit, offset, rating, provider);
+    
+    // Try to get from cache first
+    const cachedResult = searchResultsCache.get(cacheKey);
+    if (cachedResult) {
+      return cachedResult;
+    }
+
     try {
+      let result: SearchResult;
+
       // Try Giphy first since it has a working API key
       if (provider === 'giphy' || provider === 'auto') {
         try {
-          return await this.searchGiphy(sanitizedQuery, validatedLimit, offset, rating);
+          result = await circuitBreakers.gifSearch.execute(() =>
+            retryWithBackoff(
+              () => this.searchGiphy(sanitizedQuery, validatedLimit, offset, rating),
+              {
+                maxAttempts: 2,
+                baseDelay: 1000,
+                retryCondition: retryConditions.apiErrors,
+                onRetry: (attempt, error) => {
+                  console.warn(`Giphy search retry attempt ${attempt}:`, error);
+                }
+              }
+            )
+          );
+          // Cache successful result
+          searchResultsCache.set(cacheKey, result);
+          return result;
         } catch (error) {
-          console.warn('Giphy search failed:', error);
+          console.warn('Giphy search failed after retries:', error);
           if (provider === 'giphy') {
             throw error;
           }
@@ -84,53 +123,90 @@ export class GifSearchServiceImpl implements GifSearchService {
       // Only try Tenor if we have a valid API key and it's specifically requested
       if (provider === 'tenor' && this.tenorApiKey) {
         try {
-          return await this.searchTenor(sanitizedQuery, validatedLimit, offset, rating);
+          result = await circuitBreakers.gifSearch.execute(() =>
+            retryWithBackoff(
+              () => this.searchTenor(sanitizedQuery, validatedLimit, offset, rating),
+              {
+                maxAttempts: 2,
+                baseDelay: 1000,
+                retryCondition: retryConditions.apiErrors,
+                onRetry: (attempt, error) => {
+                  console.warn(`Tenor search retry attempt ${attempt}:`, error);
+                }
+              }
+            )
+          );
+          // Cache successful result
+          searchResultsCache.set(cacheKey, result);
+          return result;
         } catch (error) {
-          console.warn('Tenor search failed:', error);
+          console.warn('Tenor search failed after retries:', error);
           throw error;
         }
       }
 
       // If all providers fail, return mock data
       console.warn('All GIF providers failed, returning mock data');
-      return this.getMockSearchResult(sanitizedQuery, validatedLimit);
+      result = this.getMockSearchResult(sanitizedQuery, validatedLimit);
+      
+      // Cache mock result with shorter TTL
+      searchResultsCache.set(cacheKey, result, 60 * 1000); // 1 minute for mock data
+      return result;
     } catch (error) {
       if (this.isApiError(error)) {
         throw error;
       }
       
-      throw this.createApiError(
-        'api_error',
-        'Failed to search GIFs from all providers',
-        true,
-        true
-      );
+      throw handleApiError(error, {
+        component: 'GifSearchService',
+        action: 'searchGifs',
+        metadata: { query: sanitizedQuery, options },
+      });
     }
   }
 
   /**
-   * Get a specific GIF by ID
+   * Get a specific GIF by ID with caching
    */
   async getGifById(id: string): Promise<Gif | null> {
     if (!id || typeof id !== 'string') {
       return null;
     }
 
+    // Check cache first
+    const cacheKey = createCacheKey('gif', id);
+    const cachedGif = gifMetadataCache.get(cacheKey);
+    if (cachedGif) {
+      return cachedGif;
+    }
+
     // Try to determine provider from ID format
     try {
+      let gif: Gif | null = null;
+
       // Try Giphy first (alphanumeric IDs)
-      const gif = await this.getGiphyGifById(id);
-      if (gif) return gif;
+      gif = await this.getGiphyGifById(id);
+      if (gif) {
+        gifMetadataCache.set(cacheKey, gif);
+        return gif;
+      }
 
       // Try Tenor only if we have a valid API key (numeric IDs)
       if (/^\d+$/.test(id) && this.tenorApiKey) {
-        const tenorGif = await this.getTenorGifById(id);
-        if (tenorGif) return tenorGif;
+        gif = await this.getTenorGifById(id);
+        if (gif) {
+          gifMetadataCache.set(cacheKey, gif);
+          return gif;
+        }
       }
 
       // Check if it's a mock ID
       if (id.startsWith('mock')) {
-        return this.getMockGifById(id);
+        gif = this.getMockGifById(id);
+        if (gif) {
+          gifMetadataCache.set(cacheKey, gif, 60 * 1000); // Shorter TTL for mock data
+          return gif;
+        }
       }
 
       return null;
@@ -335,27 +411,7 @@ export class GifSearchServiceImpl implements GifSearchService {
     return mockGifs.find(gif => gif.id === id) || null;
   }
 
-  /**
-   * Sanitize and validate search query
-   */
-  private sanitizeQuery(query: string): string {
-    if (!query || typeof query !== 'string') {
-      throw this.createValidationError('Search query cannot be empty');
-    }
 
-    const trimmed = query.trim();
-    if (!trimmed) {
-      throw this.createValidationError('Search query cannot be empty');
-    }
-
-    // Remove potentially harmful characters and trim
-    const sanitized = trimmed
-      .replace(/[<>\"'&]/g, '') // Remove HTML/script injection characters
-      .replace(/\s+/g, ' ') // Normalize whitespace
-      .substring(0, 100); // Limit length
-
-    return sanitized;
-  }
 
   /**
    * Create validation error
@@ -384,6 +440,42 @@ export class GifSearchServiceImpl implements GifSearchService {
       recoverable,
       retryable,
     };
+  }
+
+  /**
+   * Get cache statistics
+   */
+  getCacheStats(): {
+    searchResults: any;
+    gifMetadata: any;
+  } {
+    return {
+      searchResults: searchResultsCache.getStats(),
+      gifMetadata: gifMetadataCache.getStats()
+    };
+  }
+
+  /**
+   * Clear all caches
+   */
+  clearCache(): void {
+    searchResultsCache.clear();
+    gifMetadataCache.clear();
+  }
+
+  /**
+   * Preload popular GIFs for better performance
+   */
+  async preloadPopularGifs(queries: string[] = ['happy', 'excited', 'thumbs up', 'celebration']): Promise<void> {
+    const preloadPromises = queries.map(async (query) => {
+      try {
+        await this.searchGifs(query, { limit: 12 });
+      } catch (error) {
+        console.warn(`Failed to preload GIFs for query: ${query}`, error);
+      }
+    });
+
+    await Promise.allSettled(preloadPromises);
   }
 
   /**

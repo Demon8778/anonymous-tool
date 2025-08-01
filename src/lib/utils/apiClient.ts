@@ -2,7 +2,8 @@
  * Centralized API client utility with retry mechanisms and error handling
  */
 
-import { API_CONFIG, HTTP_STATUS, API_ERRORS } from '../constants/api';
+import { API_CONFIG } from '../constants/api';
+import { handleApiError } from './errorHandler';
 import type { ApiError } from '../types/api';
 
 export interface RequestConfig {
@@ -125,10 +126,18 @@ export class ApiClient {
       clearTimeout(timeoutId);
       
       if (error instanceof Error && error.name === 'AbortError') {
-        throw this.createApiError('timeout_error', API_ERRORS.TIMEOUT_ERROR, true, true);
+        throw handleApiError(new Error('Request timed out'), {
+          component: 'ApiClient',
+          action: 'executeRequest',
+          metadata: { url, timeout },
+        });
       }
       
-      throw error;
+      throw handleApiError(error, {
+        component: 'ApiClient',
+        action: 'executeRequest',
+        metadata: { url },
+      });
     }
   }
 
@@ -190,7 +199,6 @@ export class ApiClient {
    */
   private async createHttpError(response: Response): Promise<ApiError> {
     let message = `HTTP ${response.status}: ${response.statusText}`;
-    let type: ApiError['type'] = 'api_error';
     
     try {
       const errorData = await response.json();
@@ -199,19 +207,14 @@ export class ApiClient {
       // Ignore JSON parsing errors
     }
     
-    // Determine error type based on status code
-    if (response.status >= 400 && response.status < 500) {
-      type = 'validation_error';
-    } else if (response.status >= 500) {
-      type = 'api_error';
-    }
+    const error = new Error(message);
+    (error as any).status = response.status;
     
-    return this.createApiError(
-      type,
-      message,
-      response.status < 500, // recoverable if not server error
-      response.status >= 500 || response.status === 429 // retryable for server errors and rate limits
-    );
+    return handleApiError(error, {
+      component: 'ApiClient',
+      action: 'createHttpError',
+      metadata: { status: response.status, statusText: response.statusText },
+    });
   }
 
   /**

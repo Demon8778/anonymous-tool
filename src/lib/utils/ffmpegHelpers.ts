@@ -32,7 +32,10 @@ export function estimateProcessingTime(fileSize: number, overlayCount: number): 
  */
 export function escapeTextForFFmpeg(text: string): string {
   // Escape special characters that have meaning in FFmpeg drawtext filter
-  return text.replace(/[:'\\]/g, '\\$&');
+  return text
+    .replace(/\\/g, '\\\\')  // Escape backslashes first
+    .replace(/:/g, '\\:')    // Escape colons
+    .replace(/'/g, "\\'");   // Escape single quotes
 }
 
 /**
