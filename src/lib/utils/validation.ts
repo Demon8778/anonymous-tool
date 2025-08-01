@@ -246,7 +246,7 @@ export class GifValidator extends Validator<Gif> {
   private setupRules() {
     this.addRule({
       name: 'hasId',
-      validate: (gif) => typeof gif.id === 'string' && gif.id.length > 0,
+      validate: (gif) => (typeof gif.id === 'string' && gif.id.length > 0) || typeof gif.id === 'number',
       message: 'GIF must have a valid ID',
       severity: 'error',
     });
@@ -285,7 +285,7 @@ export class GifValidator extends Validator<Gif> {
 
     this.addRule({
       name: 'validSource',
-      validate: (gif) => ['tenor', 'giphy', 'mock'].includes(gif.source),
+      validate: (gif) => ['tenor', 'giphy', 'mock', 'klipy'].includes(gif.source),
       message: 'GIF must have a valid source',
       severity: 'error',
     });

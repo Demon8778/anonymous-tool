@@ -2,7 +2,7 @@
  * GIF search service with multiple provider support and fallback mechanisms
  */
 
-import { tenorClient, giphyClient } from '../utils/apiClient';
+import { tenorClient, giphyClient, klipyClient } from '../utils/apiClient';
 import { API_CONFIG } from '../constants/api';
 import { handleApiError } from '../utils/errorHandler';
 import { validateSearchQuery, sanitizeSearchQuery } from '../utils/validation';
@@ -15,7 +15,7 @@ export interface SearchOptions {
   limit?: number;
   offset?: number;
   rating?: 'g' | 'pg' | 'pg-13' | 'r';
-  provider?: 'tenor' | 'giphy' | 'auto';
+  provider?: 'tenor' | 'giphy' | 'auto' | 'klipy';
 }
 
 export interface TenorGifResponse {
@@ -29,6 +29,21 @@ export interface TenorGifResponse {
     gifpreview: {
       url: string;
     };
+  };
+}
+
+export interface KlipyGifResponse {
+  id: string;
+  title: string;
+  file: {
+    hd: {
+      gif: {
+        height: number,
+        size: number,
+        url: string,
+        width: number
+      }
+    }
   };
 }
 
@@ -50,10 +65,12 @@ export interface GiphyGifResponse {
 export class GifSearchServiceImpl implements GifSearchService {
   private readonly tenorApiKey: string;
   private readonly giphyApiKey: string;
+  private readonly klipyApiKey: string;
 
   constructor() {
     this.tenorApiKey = process.env.TENOR_API_KEY || '';
     this.giphyApiKey = process.env.GIPHY_API_KEY || 'GlVGYHkr3WSBnllca54iNt0yFbjz7L65';
+    this.klipyApiKey = process.env.KLIPY_API_KEY || 'AHKOUO1AtTmVyhltqTyUpR7n1DxGr6wgEqH63Mon6R17X2CUhWkY6NkzjSXBai2I';
   }
 
   /**
@@ -72,10 +89,10 @@ export class GifSearchServiceImpl implements GifSearchService {
     const sanitizedQuery = sanitizeSearchQuery(query);
 
     const {
-      limit = API_CONFIG.TENOR.DEFAULT_LIMIT,
+      limit = API_CONFIG.KLIPY.DEFAULT_LIMIT,
       offset = 0,
       rating = 'g',
-      provider = 'auto',
+      provider = 'klipy',
     } = options;
 
     // Validate limit
@@ -92,6 +109,32 @@ export class GifSearchServiceImpl implements GifSearchService {
 
     try {
       let result: SearchResult;
+
+      if(provider === 'klipy') {
+        try {
+          result = await circuitBreakers.gifSearch.execute(() =>
+            retryWithBackoff(
+              () => this.searchKlipy(sanitizedQuery, validatedLimit, offset, rating),
+              {
+                maxAttempts: 2,
+                baseDelay: 1000,
+                retryCondition: retryConditions.apiErrors,
+                onRetry: (attempt, error) => {
+                  console.warn(`Klipy search retry attempt ${attempt}:`, error);
+                }
+              }
+            )
+          );
+          // Cache successful result
+          searchResultsCache.set(cacheKey, result);
+          return result;
+        } catch (error) {
+          console.warn('Klipy search failed after retries:', error);
+          if (provider === 'klipy') {
+            throw error;
+          }
+        }
+      }
 
       // Try Giphy first since it has a working API key
       if (provider === 'giphy' || provider === 'auto') {
@@ -217,6 +260,37 @@ export class GifSearchServiceImpl implements GifSearchService {
   }
 
   /**
+   * Search GIFs using Klipy API
+   */
+  private async searchKlipy(
+    query: string,
+    limit: number,
+    offset: number,
+    rating: string
+  ): Promise<SearchResult> {
+    const params = new URLSearchParams({
+      q: query,
+      per_page: limit.toString(),
+      pos: offset.toString(),
+      media_filter: 'gif',
+      contentfilter: rating,
+      page: offset === 0 ? '1' : Math.floor(offset / limit + 1).toString()
+    });
+
+    const response = await klipyClient.get<{ result: boolean, data: { data: KlipyGifResponse[]} }>(
+      `${API_CONFIG.KLIPY.SEARCH_ENDPOINT}/${this.klipyApiKey}/gifs/search?${params.toString()}`
+    );
+
+    const results = response.data.data.map(this.transformKlipyGif);
+    
+    return {
+      results,
+      totalCount: results.length,
+      hasMore: results.length === limit,
+    };
+  }
+
+  /**
    * Search GIFs using Tenor API
    */
   private async searchTenor(
@@ -338,6 +412,16 @@ export class GifSearchServiceImpl implements GifSearchService {
     width: gif.media_formats.gif.dims[0],
     height: gif.media_formats.gif.dims[1],
     source: 'tenor',
+  });
+
+  private transformKlipyGif = (gif: KlipyGifResponse): Gif => ({
+    id: gif.id,
+    title: gif.title || 'Untitled GIF',
+    url: gif.file.hd.gif.url,
+    preview: gif.file.hd.gif.url,
+    width: gif.file.hd.gif.width,
+    height: gif.file.hd.gif.height,
+    source: 'klipy',
   });
 
   /**

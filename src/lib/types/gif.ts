@@ -13,7 +13,7 @@ export interface Gif {
   height: number;
   duration?: number;
   frameCount?: number;
-  source: 'tenor' | 'giphy' | 'mock';
+  source: 'tenor' | 'giphy' | 'mock' | 'klipy';
 }
 
 export interface ProcessedGif extends Gif {

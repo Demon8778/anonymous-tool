@@ -1,5 +1,11 @@
 // API configuration constants
 export const API_CONFIG = {
+  KLIPY: {
+    BASE_URL: 'https://api.klipy.com/api/v1',
+    SEARCH_ENDPOINT: ``,
+    DEFAULT_LIMIT: 20 as number,
+    MAX_LIMIT: 50 as number,
+  },
   // External API endpoints
   TENOR: {
     BASE_URL: 'https://tenor.googleapis.com/v2',

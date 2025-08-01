@@ -262,3 +262,4 @@ export const apiClient = new ApiClient();
 // External API clients
 export const tenorClient = new ApiClient(API_CONFIG.TENOR.BASE_URL, API_CONFIG.TIMEOUTS.search);
 export const giphyClient = new ApiClient(API_CONFIG.GIPHY.BASE_URL, API_CONFIG.TIMEOUTS.search);
+export const klipyClient = new ApiClient(API_CONFIG.KLIPY.BASE_URL, API_CONFIG.TIMEOUTS.search);
