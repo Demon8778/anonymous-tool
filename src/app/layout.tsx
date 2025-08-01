@@ -55,9 +55,9 @@ export default function RootLayout({
               <ErrorBoundary level="component">
                 <Navigation />
               </ErrorBoundary>
-              <ErrorBoundary level="component">
+              {/* <ErrorBoundary level="component">
                 <Breadcrumbs />
-              </ErrorBoundary>
+              </ErrorBoundary> */}
               <main className="flex-1">
                 <ErrorBoundary level="page">
                   {children}

@@ -91,7 +91,7 @@ export function SharingControls({ gif, className }: SharingControlsProps) {
             onClick={handleCreateLink}
             disabled={isCreatingLink}
             size="lg"
-            className="w-full group bg-gradient-to-r from-purple-600 via-pink-600 to-purple-600 hover:from-purple-700 hover:via-pink-700 hover:to-purple-700 transition-all duration-300 shadow-lg hover:shadow-2xl hover-lift focus-ring"
+            className="w-full group bg-gradient-to-r from-primary via-primary/90 to-primary hover:from-primary/90 hover:via-primary/80 hover:to-primary/90 transition-all duration-300 shadow-lg hover:shadow-2xl hover-lift focus-ring"
           >
             {isCreatingLink ? (
               <>
@@ -130,8 +130,8 @@ export function SharingControls({ gif, className }: SharingControlsProps) {
                   )}
                 </Button>
               </div>
-              <div className="glass border border-blue-200/50 rounded-lg p-4 bg-gradient-to-r from-blue-50/50 to-purple-50/50 animate-fade-in">
-                <p className="text-responsive-sm text-blue-800 dark:text-blue-200">
+              <div className="glass border border-border/50 rounded-lg p-4 bg-gradient-to-r from-muted/50 to-muted/30 animate-fade-in">
+                <p className="text-responsive-sm text-foreground">
                   <span className="font-semibold">Expires:</span> {new Date(shareableLink.expiresAt).toLocaleDateString()}
                 </p>
               </div>
@@ -147,7 +147,7 @@ export function SharingControls({ gif, className }: SharingControlsProps) {
                   <Button
                     variant="outline"
                     onClick={() => handleSocialShare('X (Twitter)', socialUrls.twitter)}
-                    className="group flex items-center gap-2 hover:bg-black hover:text-white hover:border-black hover-lift focus-ring touch-target transition-all duration-300"
+                    className="group flex items-center gap-2 hover:bg-foreground hover:text-background hover:border-foreground hover-lift focus-ring touch-target transition-all duration-300"
                   >
                     <X className="h-4 w-4 group-hover:scale-110 group-hover:rotate-3 transition-all duration-200" />
                     <span className="text-responsive-sm font-medium">X</span>
@@ -155,7 +155,7 @@ export function SharingControls({ gif, className }: SharingControlsProps) {
                   <Button
                     variant="outline"
                     onClick={() => handleSocialShare('WhatsApp', socialUrls.whatsapp)}
-                    className="group flex items-center gap-2 hover:bg-green-500 hover:text-white hover:border-green-500 hover-lift focus-ring touch-target transition-all duration-300"
+                    className="group flex items-center gap-2 hover:bg-primary hover:text-primary-foreground hover:border-primary hover-lift focus-ring touch-target transition-all duration-300"
                   >
                     <MessageCircle className="h-4 w-4 group-hover:scale-110 group-hover:rotate-3 transition-all duration-200" />
                     <span className="text-responsive-sm font-medium">WhatsApp</span>
@@ -163,7 +163,7 @@ export function SharingControls({ gif, className }: SharingControlsProps) {
                   <Button
                     variant="outline"
                     onClick={() => handleSocialShare('Email', socialUrls.email)}
-                    className="group flex items-center gap-2 hover:bg-gray-600 hover:text-white hover:border-gray-600 hover-lift focus-ring touch-target transition-all duration-300"
+                    className="group flex items-center gap-2 hover:bg-muted hover:text-foreground hover:border-muted hover-lift focus-ring touch-target transition-all duration-300"
                   >
                     <Mail className="h-4 w-4 group-hover:scale-110 group-hover:rotate-3 transition-all duration-200" />
                     <span className="text-responsive-sm font-medium">Email</span>
@@ -171,7 +171,7 @@ export function SharingControls({ gif, className }: SharingControlsProps) {
                   <Button
                     variant="outline"
                     onClick={() => handleSocialShare('Reddit', socialUrls.reddit)}
-                    className="group flex items-center gap-2 hover:bg-orange-500 hover:text-white hover:border-orange-500 hover-lift focus-ring touch-target transition-all duration-300"
+                    className="group flex items-center gap-2 hover:bg-accent hover:text-accent-foreground hover:border-accent hover-lift focus-ring touch-target transition-all duration-300"
                   >
                     <ExternalLink className="h-4 w-4 group-hover:scale-110 group-hover:rotate-3 transition-all duration-200" />
                     <span className="text-responsive-sm font-medium">Reddit</span>

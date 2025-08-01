@@ -81,8 +81,8 @@ function GifCard({ gif, isSelected, onSelect, onError }: GifCardProps) {
       >
       <CardContent className="p-0 relative overflow-hidden rounded-lg">
         {imageError ? (
-          <div className="aspect-square bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-900 flex items-center justify-center animate-fade-in">
-            <div className="text-center text-gray-500 dark:text-gray-400">
+          <div className="aspect-square bg-gradient-to-br from-muted/50 to-muted/30 flex items-center justify-center animate-fade-in">
+            <div className="text-center text-muted-foreground">
               <AlertCircle className="h-8 w-8 mx-auto mb-2 animate-pulse" />
               <p className="text-sm font-medium">Failed to load</p>
               <p className="text-xs text-muted-foreground">Try again later</p>
@@ -90,7 +90,7 @@ function GifCard({ gif, isSelected, onSelect, onError }: GifCardProps) {
           </div>
         ) : (
           <>
-            <div className="relative aspect-square overflow-hidden bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-900">
+            <div className="relative aspect-square overflow-hidden bg-gradient-to-br from-muted/50 to-muted/30">
               {/* Loading skeleton */}
               {isLoading && (
                 <div className="absolute inset-0 loading-skeleton">
@@ -119,7 +119,7 @@ function GifCard({ gif, isSelected, onSelect, onError }: GifCardProps) {
                 <Button
                   variant="secondary"
                   size="sm"
-                  className="glass hover:bg-white/90 text-gray-800 shadow-lg hover-lift touch-target"
+                  className="glass hover:bg-background/90 text-foreground shadow-lg hover-lift touch-target"
                   onClick={togglePlayback}
                 >
                   {isPlaying ? (
@@ -133,7 +133,7 @@ function GifCard({ gif, isSelected, onSelect, onError }: GifCardProps) {
               {/* Enhanced selection indicator */}
               {isSelected && (
                 <div className="absolute top-2 right-2 animate-scale-in">
-                  <Badge className="bg-gradient-to-r from-blue-500 to-purple-500 text-white shadow-lg animate-pulse-gentle">
+                  <Badge className="bg-gradient-to-r from-primary to-primary/80 text-primary-foreground shadow-lg animate-pulse-gentle">
                     Selected
                   </Badge>
                 </div>
@@ -141,7 +141,7 @@ function GifCard({ gif, isSelected, onSelect, onError }: GifCardProps) {
 
               {/* Enhanced source badge */}
               <div className="absolute bottom-2 left-2">
-                <Badge variant="secondary" className="text-xs glass text-gray-700 dark:text-gray-300 shadow-sm">
+                <Badge variant="secondary" className="text-xs glass text-muted-foreground shadow-sm">
                   {gif.source.toUpperCase()}
                 </Badge>
               </div>
@@ -219,9 +219,9 @@ export function GifGrid({
 
     return (
       <div className={`w-full ${className}`}>
-        <Alert className="bg-red-50 border-red-200">
-          <AlertCircle className="h-4 w-4 text-red-600" />
-          <AlertDescription className="text-red-800">
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>
             <div className="space-y-2">
               <p>{errorMessage}</p>
               {suggestions.length > 0 && (

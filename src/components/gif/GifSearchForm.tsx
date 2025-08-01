@@ -8,6 +8,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { validateSearchQuery, sanitizeSearchQuery } from '@/lib/utils/validation';
 import { GifErrorBoundary } from '@/components/error/GifErrorBoundary';
+import { Badge } from '../ui/badge';
 
 interface GifSearchFormProps {
   onSearch: (query: string) => void;
@@ -68,14 +69,14 @@ export function GifSearchForm({
 
   return (
     <GifErrorBoundary type="search">
-      <Card className={`w-full max-w-2xl mx-auto bg-gradient-to-br from-white/90 to-white/70 backdrop-blur-sm border-white/20 shadow-xl ${className}`}>
+      <Card className={`w-full max-w-2xl mx-auto bg-gradient-to-br from-card/90 to-card/70 backdrop-blur-sm border-border/20 shadow-xl ${className}`}>
         <CardContent className="p-6">
           <form onSubmit={handleSubmit} className="space-y-4">
             {/* Validation Error */}
             {validationError && (
-              <Alert className="bg-red-50 border-red-200">
-                <AlertCircle className="h-4 w-4 text-red-600" />
-                <AlertDescription className="text-red-800">
+              <Alert variant="destructive">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>
                   {validationError}
                 </AlertDescription>
               </Alert>
@@ -83,7 +84,7 @@ export function GifSearchForm({
 
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <Search className="h-5 w-5 text-gray-400" />
+                <Search className="h-5 w-5 text-muted-foreground" />
               </div>
               <Input
                 type="text"
@@ -92,8 +93,8 @@ export function GifSearchForm({
                 onKeyDown={handleKeyDown}
                 placeholder={placeholder}
                 disabled={isLoading}
-                className={`pl-10 pr-4 py-3 text-lg bg-white/80 border-gray-200 focus:border-blue-500 focus:ring-blue-500 rounded-lg transition-all duration-200 ${
-                  validationError ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : ''
+                className={`pl-10 pr-4 py-3 text-lg bg-background/80 border-border focus:border-primary focus:ring-primary rounded-lg transition-all duration-200 ${
+                  validationError ? 'border-destructive focus:border-destructive focus:ring-destructive' : ''
                 }`}
                 autoComplete="off"
                 autoFocus
@@ -104,7 +105,7 @@ export function GifSearchForm({
             <Button
               type="submit"
               disabled={isLoading || !query.trim() || !!validationError}
-              className="w-full py-3 text-lg font-semibold bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white rounded-lg transition-all duration-200 transform hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+              className="w-full py-3 text-lg font-semibold bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-primary-foreground rounded-lg transition-all duration-200 transform hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
             >
               {isLoading ? (
                 <>
@@ -120,9 +121,33 @@ export function GifSearchForm({
             </Button>
           </form>
           
-          {/* Search tips */}
-          <div className="mt-4 text-sm text-gray-600 text-center">
-            <p>Try searching for emotions, reactions, or specific topics</p>
+          {/* Enhanced Search tips */}
+          <div className="mt-6 space-y-3">
+            <div className="text-center">
+              <p className="text-sm text-muted-foreground">
+                Try searching for <strong className="text-foreground">emotions</strong>, <strong className="text-foreground">reactions</strong>, or <strong className="text-foreground">topics</strong>
+              </p>
+            </div>
+            
+            {/* Quick suggestions */}
+            <div className="flex flex-wrap justify-center gap-2">
+              {['happy', 'excited', 'funny', 'thumbs up', 'dancing'].map((suggestion) => (
+                <Badge
+                  key={suggestion}
+                  variant="outline"
+                  className="cursor-pointer hover:bg-primary hover:text-primary-foreground hover:border-primary transition-all duration-200 text-xs"
+                  onClick={() => {
+                    const searchInput = document.querySelector('input[placeholder*="Search"]') as HTMLInputElement;
+                    if (searchInput) {
+                      searchInput.value = suggestion;
+                      searchInput.focus();
+                    }
+                  }}
+                >
+                  {suggestion}
+                </Badge>
+              ))}
+            </div>
           </div>
         </CardContent>
       </Card>

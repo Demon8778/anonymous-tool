@@ -179,7 +179,7 @@ export function TextControls({ style, onStyleChange, className }: TextControlsPr
           <div className="space-y-3">
             <div className="flex items-center gap-3">
               <div
-                className="w-10 h-10 rounded-md border-2 border-gray-300 cursor-pointer shadow-sm"
+                className="w-10 h-10 rounded-md border-2 border-border cursor-pointer shadow-sm"
                 style={{ backgroundColor: style.color }}
                 onClick={() => {
                   const input = document.createElement('input');
@@ -203,7 +203,7 @@ export function TextControls({ style, onStyleChange, className }: TextControlsPr
                   key={color}
                   className={cn(
                     'w-8 h-8 rounded-md border-2 cursor-pointer transition-all hover:scale-110',
-                    style.color === color ? 'border-blue-500 ring-2 ring-blue-200' : 'border-gray-300'
+                    style.color === color ? 'border-primary ring-2 ring-primary/20' : 'border-border'
                   )}
                   style={{ backgroundColor: color }}
                   onClick={() => handleColorChange(color, 'color')}
@@ -219,7 +219,7 @@ export function TextControls({ style, onStyleChange, className }: TextControlsPr
           <div className="space-y-3">
             <div className="flex items-center gap-3">
               <div
-                className="w-10 h-10 rounded-md border-2 border-gray-300 cursor-pointer shadow-sm"
+                className="w-10 h-10 rounded-md border-2 border-border cursor-pointer shadow-sm"
                 style={{ backgroundColor: style.strokeColor }}
                 onClick={() => {
                   const input = document.createElement('input');
@@ -243,7 +243,7 @@ export function TextControls({ style, onStyleChange, className }: TextControlsPr
                   key={color}
                   className={cn(
                     'w-8 h-8 rounded-md border-2 cursor-pointer transition-all hover:scale-110',
-                    style.strokeColor === color ? 'border-blue-500 ring-2 ring-blue-200' : 'border-gray-300'
+                    style.strokeColor === color ? 'border-primary ring-2 ring-primary/20' : 'border-border'
                   )}
                   style={{ backgroundColor: color }}
                   onClick={() => handleColorChange(color, 'strokeColor')}
@@ -294,10 +294,7 @@ export function TextControls({ style, onStyleChange, className }: TextControlsPr
 
         {/* Gradient background for visual polish */}
         <div 
-          className="absolute inset-0 -z-10 rounded-lg opacity-5"
-          style={{
-            background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(147, 51, 234, 0.1) 100%)',
-          }}
+          className="absolute inset-0 -z-10 rounded-lg opacity-5 bg-gradient-to-br from-primary/10 to-accent/10"
         />
       </CardContent>
     </Card>

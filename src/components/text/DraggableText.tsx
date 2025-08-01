@@ -258,9 +258,8 @@ export function DraggableText({
       {isActive && (
         <>
           <div 
-            className="absolute inset-0 -z-10 rounded-lg opacity-20 animate-pulse-gentle"
+            className="absolute inset-0 -z-10 rounded-lg opacity-20 animate-pulse-gentle bg-gradient-to-br from-primary/40 to-accent/40"
             style={{
-              background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.4) 0%, rgba(147, 51, 234, 0.4) 100%)',
               filter: 'blur(12px)',
               transform: 'scale(1.3)',
             }}

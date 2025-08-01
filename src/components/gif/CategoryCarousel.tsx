@@ -155,104 +155,101 @@ export function CategoryCarousel({ onCategorySelect, className }: CategoryCarous
 
   return (
     <div 
-      className={cn("relative overflow-hidden py-6", className)}
-      onMouseEnter={handleMouseEnter}
-      onMouseLeave={handleMouseLeave}
-      data-testid="category-carousel"
-    >
-      {/* Gradient overlays for fade effect */}
-      <div className="absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-white via-white/80 to-transparent z-10 pointer-events-none" />
-      <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-white via-white/80 to-transparent z-10 pointer-events-none" />
-      
-      {/* Scrollable container */}
-      <div
-        ref={scrollContainerRef}
-        className="flex gap-4 overflow-x-auto scrollbar-hide px-8"
-        style={{
-          scrollbarWidth: 'none',
-          msOverflowStyle: 'none',
-          WebkitScrollbar: { display: 'none' }
-        }}
-      >
-        {/* Duplicate categories for seamless loop */}
-        {[...POPULAR_CATEGORIES, ...POPULAR_CATEGORIES].map((category, index) => {
-          const isOriginal = index < POPULAR_CATEGORIES.length;
-          const uniqueKey = `${category.id}-${index}`;
-          const isHovered = hoveredCategory === category.id;
-          const isClicked = clickedCategory === category.id;
-          
-          return (
-            <motion.div
-              key={uniqueKey}
-              className={cn(
-                "flex-shrink-0 px-6 py-3 rounded-full cursor-pointer select-none",
-                "transition-all duration-300 font-medium shadow-lg text-white",
-                "hover:shadow-xl active:shadow-md",
-                category.color
-              )}
-              initial={{ scale: 1, y: 0 }}
-              whileHover={{
-                scale: 1.1,
-                y: -2,
-                boxShadow: "0 10px 25px rgba(0,0,0,0.2)",
-                transition: { duration: 0.2 }
-              }}
-              whileTap={{
-                scale: 0.95,
-                transition: { duration: 0.1 }
-              }}
-              animate={isClicked ? {
-                scale: [1, 1.2, 1],
-                transition: { duration: 0.3, times: [0, 0.5, 1] }
+  className={cn("relative overflow-hidden py-6", className)}
+  onMouseEnter={handleMouseEnter}
+  onMouseLeave={handleMouseLeave}
+  data-testid="category-carousel"
+>
+  {/* Gradient overlays for scroll fade */}
+  <div className="absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-background via-background/80 to-transparent z-10 pointer-events-none" />
+  <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-background via-background/80 to-transparent z-10 pointer-events-none" />
+
+  {/* Scrollable container */}
+  <div
+    ref={scrollContainerRef}
+    className="flex gap-4 overflow-x-auto px-8 scrollbar-hide"
+    style={{
+      scrollbarWidth: 'none',
+      msOverflowStyle: 'none',
+    }}
+  >
+    {[...POPULAR_CATEGORIES, ...POPULAR_CATEGORIES].map((category, index) => {
+      const uniqueKey = `${category.id}-${index}`;
+      const isHovered = hoveredCategory === category.id;
+      const isClicked = clickedCategory === category.id;
+
+      return (
+        <motion.div
+          key={uniqueKey}
+          className={cn(
+            "flex-shrink-0 relative px-6 py-3 rounded-full cursor-pointer select-none transition-all duration-300 font-medium shadow-lg",
+            "hover:shadow-xl active:shadow-md focus:outline-none focus:ring-2 focus:ring-ring",
+            category.color,
+            "text-background" // Supports dark/light theme text
+          )}
+          initial={{ scale: 1, y: 0 }}
+          whileHover={{
+            scale: 1.1,
+            y: -2,
+            boxShadow: "0 10px 25px rgba(0,0,0,0.15)",
+            transition: { duration: 0.2 }
+          }}
+          whileTap={{
+            scale: 0.95,
+            transition: { duration: 0.1 }
+          }}
+          animate={isClicked ? {
+            scale: [1, 1.2, 1],
+            transition: { duration: 0.3, times: [0, 0.5, 1] }
+          } : {}}
+          onClick={() => handleCategoryClick(category)}
+          onMouseEnter={() => handleCategoryHover(category.id)}
+          onMouseLeave={() => handleCategoryHover(null)}
+        >
+          <div className="flex items-center gap-2 z-10 relative">
+            <motion.span 
+              className="text-lg"
+              animate={isHovered ? {
+                rotate: [0, -10, 10, -10, 0],
+                transition: { duration: 0.5 }
               } : {}}
-              onClick={() => handleCategoryClick(category)}
-              onMouseEnter={() => handleCategoryHover(category.id)}
-              onMouseLeave={() => handleCategoryHover(null)}
             >
-              <div className="flex items-center gap-2">
-                <motion.span 
-                  className="text-lg"
-                  animate={isHovered ? {
-                    rotate: [0, -10, 10, -10, 0],
-                    transition: { duration: 0.5 }
-                  } : {}}
-                >
-                  {category.emoji}
-                </motion.span>
-                <span className="text-sm font-semibold whitespace-nowrap">
-                  {category.name}
-                </span>
-              </div>
-              
-              {/* Hover glow effect */}
-              <AnimatePresence>
-                {isHovered && (
-                  <motion.div
-                    className="absolute inset-0 rounded-full bg-white/20"
-                    initial={{ opacity: 0, scale: 0.8 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.8 }}
-                    transition={{ duration: 0.2 }}
-                  />
-                )}
-              </AnimatePresence>
-            </motion.div>
-          );
-        })}
-      </div>
-      
-      {/* Instructions text */}
-      <motion.div 
-        className="text-center mt-4"
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.5, duration: 0.3 }}
-      >
-        <p className="text-sm text-gray-600">
-          Click a category to search for popular GIFs
-        </p>
-      </motion.div>
-    </div>
+              {category.emoji}
+            </motion.span>
+            <span className="text-sm font-semibold whitespace-nowrap">
+              {category.name}
+            </span>
+          </div>
+
+          {/* Hover glow */}
+          <AnimatePresence>
+            {isHovered && (
+              <motion.div
+                className="absolute inset-0 rounded-full bg-foreground/10"
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.8 }}
+                transition={{ duration: 0.2 }}
+              />
+            )}
+          </AnimatePresence>
+        </motion.div>
+      );
+    })}
+  </div>
+
+  {/* Instructions */}
+  <motion.div 
+    className="text-center mt-4"
+    initial={{ opacity: 0, y: 10 }}
+    animate={{ opacity: 1, y: 0 }}
+    transition={{ delay: 0.5, duration: 0.3 }}
+  >
+    <p className="text-sm text-muted-foreground">
+      Click a category to search for popular GIFs
+    </p>
+  </motion.div>
+</div>
   );
 }
 
