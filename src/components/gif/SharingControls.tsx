@@ -14,6 +14,7 @@ import { Separator } from '@/components/ui/separator';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useSharing } from '@/hooks/useSharing';
 import { useToast } from '@/hooks/use-toast';
+import { cn } from '@/lib/utils';
 import type { ProcessedGif } from '@/lib/types';
 
 interface SharingControlsProps {
@@ -68,20 +69,20 @@ export function SharingControls({ gif, className }: SharingControlsProps) {
   };
 
   return (
-    <Card className={className}>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Share2 className="h-5 w-5" />
-          Share Your GIF
+    <Card className={cn('glass shadow-xl', className)}>
+      <CardHeader className="animate-fade-in">
+        <CardTitle className="flex items-center gap-2 text-responsive-base group">
+          <Share2 className="h-5 w-5 text-primary group-hover:rotate-12 transition-transform duration-300" />
+          <span className="gradient-text">Share Your GIF</span>
         </CardTitle>
-        <CardDescription>
+        <CardDescription className="text-responsive-sm leading-relaxed">
           Create a shareable link or share directly to social media
         </CardDescription>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="space-responsive animate-fade-in-delay">
         {error && (
-          <Alert variant="destructive">
-            <AlertDescription>{error}</AlertDescription>
+          <Alert variant="destructive" className="glass animate-slide-up">
+            <AlertDescription className="text-responsive-sm">{error}</AlertDescription>
           </Alert>
         )}
 
@@ -89,113 +90,106 @@ export function SharingControls({ gif, className }: SharingControlsProps) {
           <Button
             onClick={handleCreateLink}
             disabled={isCreatingLink}
-            className="w-full group bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 transition-all duration-200 shadow-lg hover:shadow-xl"
+            size="lg"
+            className="w-full group bg-gradient-to-r from-purple-600 via-pink-600 to-purple-600 hover:from-purple-700 hover:via-pink-700 hover:to-purple-700 transition-all duration-300 shadow-lg hover:shadow-2xl hover-lift focus-ring"
           >
             {isCreatingLink ? (
               <>
-                <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-2"></div>
-                Creating Link...
+                <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent mr-2"></div>
+                <span className="text-responsive-sm font-semibold">Creating Link...</span>
               </>
             ) : (
               <>
-                <Share2 className="h-4 w-4 mr-2 group-hover:rotate-12 transition-transform" />
-                Create Shareable Link
+                <Share2 className="h-5 w-5 mr-2 group-hover:rotate-12 transition-transform duration-300" />
+                <span className="text-responsive-sm font-semibold">Create Shareable Link</span>
               </>
             )}
           </Button>
         ) : (
-          <div className="space-y-4">
+          <div className="space-responsive animate-slide-up">
             {/* Enhanced Shareable Link */}
-            <div className="space-y-3">
-              <Label htmlFor="share-link" className="text-base font-semibold">Shareable Link</Label>
+            <div className="space-y-4">
+              <Label htmlFor="share-link" className="text-responsive-base font-semibold text-foreground">Shareable Link</Label>
               <div className="flex gap-2">
                 <Input
                   id="share-link"
                   value={shareableLink.url}
                   readOnly
-                  className="flex-1 bg-gray-50 border-gray-200 focus:border-purple-500 transition-colors"
+                  className="flex-1 glass focus:ring-2 focus:ring-primary/20 transition-all duration-200 font-mono text-sm"
                 />
                 <Button
                   onClick={handleCopyLink}
                   variant="outline"
                   size="icon"
-                  className="shrink-0 group hover:bg-green-50 hover:border-green-500 transition-all duration-200"
+                  className="shrink-0 group hover:bg-green-50 hover:border-green-500 hover-lift focus-ring touch-target transition-all duration-300"
                 >
                   {copiedLink ? (
-                    <Check className="h-4 w-4 text-green-600 animate-pulse" />
+                    <Check className="h-4 w-4 text-green-600 animate-bounce-gentle" />
                   ) : (
-                    <Copy className="h-4 w-4 group-hover:text-green-600 group-hover:scale-110 transition-all" />
+                    <Copy className="h-4 w-4 group-hover:text-green-600 group-hover:scale-110 transition-all duration-200" />
                   )}
                 </Button>
               </div>
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-                <p className="text-sm text-blue-800">
-                  <span className="font-medium">Expires:</span> {new Date(shareableLink.expiresAt).toLocaleDateString()}
+              <div className="glass border border-blue-200/50 rounded-lg p-4 bg-gradient-to-r from-blue-50/50 to-purple-50/50 animate-fade-in">
+                <p className="text-responsive-sm text-blue-800 dark:text-blue-200">
+                  <span className="font-semibold">Expires:</span> {new Date(shareableLink.expiresAt).toLocaleDateString()}
                 </p>
               </div>
             </div>
 
-            <Separator />
+            <Separator className="bg-gradient-to-r from-transparent via-border to-transparent" />
 
             {/* Enhanced Social Media Sharing */}
             {socialUrls && (
-              <div className="space-y-4">
-                <Label className="text-base font-semibold">Share on Social Media</Label>
+              <div className="space-y-4 animate-slide-up" style={{ animationDelay: '0.2s' }}>
+                <Label className="text-responsive-base font-semibold text-foreground">Share on Social Media</Label>
                 <div className="grid grid-cols-2 gap-3">
                   <Button
                     variant="outline"
                     onClick={() => handleSocialShare('X (Twitter)', socialUrls.twitter)}
-                    className="group flex items-center gap-2 hover:bg-black hover:text-white hover:border-black transition-all duration-200"
+                    className="group flex items-center gap-2 hover:bg-black hover:text-white hover:border-black hover-lift focus-ring touch-target transition-all duration-300"
                   >
-                    <X className="h-4 w-4 group-hover:scale-110 transition-transform" />
-                    X
-                  </Button>
-                  <Button
-                    variant="outline"
-                    onClick={() => handleSocialShare('Facebook', socialUrls.facebook)}
-                    className="group flex items-center gap-2 hover:bg-blue-600 hover:text-white hover:border-blue-600 transition-all duration-200"
-                  >
-                    <Facebook className="h-4 w-4 group-hover:scale-110 transition-transform" />
-                    Facebook
+                    <X className="h-4 w-4 group-hover:scale-110 group-hover:rotate-3 transition-all duration-200" />
+                    <span className="text-responsive-sm font-medium">X</span>
                   </Button>
                   <Button
                     variant="outline"
                     onClick={() => handleSocialShare('WhatsApp', socialUrls.whatsapp)}
-                    className="group flex items-center gap-2 hover:bg-green-500 hover:text-white hover:border-green-500 transition-all duration-200"
+                    className="group flex items-center gap-2 hover:bg-green-500 hover:text-white hover:border-green-500 hover-lift focus-ring touch-target transition-all duration-300"
                   >
-                    <MessageCircle className="h-4 w-4 group-hover:scale-110 transition-transform" />
-                    WhatsApp
+                    <MessageCircle className="h-4 w-4 group-hover:scale-110 group-hover:rotate-3 transition-all duration-200" />
+                    <span className="text-responsive-sm font-medium">WhatsApp</span>
                   </Button>
                   <Button
                     variant="outline"
                     onClick={() => handleSocialShare('Email', socialUrls.email)}
-                    className="group flex items-center gap-2 hover:bg-gray-600 hover:text-white hover:border-gray-600 transition-all duration-200"
+                    className="group flex items-center gap-2 hover:bg-gray-600 hover:text-white hover:border-gray-600 hover-lift focus-ring touch-target transition-all duration-300"
                   >
-                    <Mail className="h-4 w-4 group-hover:scale-110 transition-transform" />
-                    Email
+                    <Mail className="h-4 w-4 group-hover:scale-110 group-hover:rotate-3 transition-all duration-200" />
+                    <span className="text-responsive-sm font-medium">Email</span>
                   </Button>
                   <Button
                     variant="outline"
                     onClick={() => handleSocialShare('Reddit', socialUrls.reddit)}
-                    className="group flex items-center gap-2 col-span-2 hover:bg-orange-500 hover:text-white hover:border-orange-500 transition-all duration-200"
+                    className="group flex items-center gap-2 hover:bg-orange-500 hover:text-white hover:border-orange-500 hover-lift focus-ring touch-target transition-all duration-300"
                   >
-                    <ExternalLink className="h-4 w-4 group-hover:scale-110 transition-transform" />
-                    Reddit
+                    <ExternalLink className="h-4 w-4 group-hover:scale-110 group-hover:rotate-3 transition-all duration-200" />
+                    <span className="text-responsive-sm font-medium">Reddit</span>
                   </Button>
                 </div>
               </div>
             )}
 
-            <Separator />
+            <Separator className="bg-gradient-to-r from-transparent via-border to-transparent" />
 
             {/* Enhanced Reset */}
             <Button
               variant="ghost"
               onClick={reset}
-              className="w-full group hover:bg-gray-100 transition-all duration-200"
+              className="w-full group hover:bg-accent/80 hover-lift focus-ring transition-all duration-300"
             >
-              <Share2 className="h-4 w-4 mr-2 group-hover:rotate-12 transition-transform" />
-              Create New Link
+              <Share2 className="h-4 w-4 mr-2 group-hover:rotate-12 transition-transform duration-300" />
+              <span className="text-responsive-sm font-medium">Create New Link</span>
             </Button>
           </div>
         )}

@@ -36,7 +36,7 @@ export function useErrorHandler(options: UseErrorHandlerOptions = {}) {
     canRetry: false,
   });
 
-  const retryTimeoutRef = useRef<NodeJS.Timeout>();
+  const retryTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const handleError = useCallback((
     error: unknown,
@@ -186,7 +186,9 @@ export function useAsyncOperation<T = any>(options: UseErrorHandlerOptions = {})
       setData(result);
       return result;
     } catch (error) {
-      errorHandler.handleError(error, context, () => execute(operation, context));
+      errorHandler.handleError(error, context, async () => {
+        await execute(operation, context);
+      });
       return null;
     } finally {
       setIsLoading(false);

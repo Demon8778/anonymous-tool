@@ -149,7 +149,7 @@ describe('useTextOverlay', () => {
     });
     
     // Export
-    let exportedData: string;
+    let exportedData: string = '';
     act(() => {
       exportedData = result.current.exportOverlays();
     });

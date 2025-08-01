@@ -167,10 +167,10 @@ export function DraggableText({
     <div
       ref={textRef}
       className={cn(
-        'absolute cursor-move select-none transition-all duration-200',
-        'hover:scale-105 active:scale-95',
-        isActive && 'ring-2 ring-blue-400 ring-offset-2 ring-offset-transparent',
-        isDragging && 'z-50 scale-110 shadow-lg',
+        'absolute cursor-move select-none transition-all duration-300 touch-manipulation',
+        'hover:scale-105 active:scale-95 focus-ring',
+        isActive && 'ring-2 ring-primary ring-offset-2 ring-offset-transparent shadow-lg',
+        isDragging && 'z-50 scale-110 shadow-2xl',
         className
       )}
       style={{
@@ -182,58 +182,103 @@ export function DraggableText({
       onMouseDown={handleMouseDown}
       onTouchStart={handleTouchStart}
       onClick={handleClick}
+      tabIndex={0}
+      role="button"
+      aria-label={`Text overlay: ${overlay.text || 'Empty text'}`}
     >
-      {/* Text content */}
+      {/* Enhanced text content */}
       <div
         className={cn(
-          'relative px-2 py-1 rounded',
-          isActive && 'bg-blue-500/10 backdrop-blur-sm'
+          'relative px-3 py-2 rounded-lg transition-all duration-300',
+          isActive && 'glass ring-1 ring-primary/20 shadow-lg',
+          isDragging && 'bg-primary/10 backdrop-blur-md'
         )}
       >
-        {overlay.text || 'Empty Text'}
+        <span className={cn(
+          'relative z-10',
+          overlay.text ? 'opacity-100' : 'opacity-60 italic'
+        )}>
+          {overlay.text || 'Empty Text'}
+        </span>
+        
+        {/* Text glow effect when active */}
+        {isActive && (
+          <div 
+            className="absolute inset-0 rounded-lg opacity-30 animate-pulse-gentle"
+            style={{
+              background: `linear-gradient(135deg, ${overlay.style.color}20, transparent)`,
+              filter: 'blur(4px)',
+            }}
+          />
+        )}
       </div>
 
-      {/* Drag handles for touch devices */}
+      {/* Enhanced drag handles for touch devices */}
       {isActive && (
         <>
-          {/* Corner handles */}
+          {/* Corner handles with better touch targets */}
           <div
-            className="absolute -top-2 -left-2 w-4 h-4 bg-blue-500 rounded-full border-2 border-white shadow-md cursor-move touch-manipulation"
+            className="absolute -top-3 -left-3 bg-gradient-to-br from-primary to-primary/80 rounded-full border-2 border-white shadow-lg cursor-move touch-manipulation hover:scale-110 transition-transform duration-200 animate-scale-in"
             style={{ width: handleSize, height: handleSize }}
             onMouseDown={handleMouseDown}
             onTouchStart={handleTouchStart}
           />
           <div
-            className="absolute -top-2 -right-2 w-4 h-4 bg-blue-500 rounded-full border-2 border-white shadow-md cursor-move touch-manipulation"
-            style={{ width: handleSize, height: handleSize }}
+            className="absolute -top-3 -right-3 bg-gradient-to-br from-primary to-primary/80 rounded-full border-2 border-white shadow-lg cursor-move touch-manipulation hover:scale-110 transition-transform duration-200 animate-scale-in"
+            style={{ width: handleSize, height: handleSize, animationDelay: '0.1s' }}
             onMouseDown={handleMouseDown}
             onTouchStart={handleTouchStart}
           />
           <div
-            className="absolute -bottom-2 -left-2 w-4 h-4 bg-blue-500 rounded-full border-2 border-white shadow-md cursor-move touch-manipulation"
-            style={{ width: handleSize, height: handleSize }}
+            className="absolute -bottom-3 -left-3 bg-gradient-to-br from-primary to-primary/80 rounded-full border-2 border-white shadow-lg cursor-move touch-manipulation hover:scale-110 transition-transform duration-200 animate-scale-in"
+            style={{ width: handleSize, height: handleSize, animationDelay: '0.2s' }}
             onMouseDown={handleMouseDown}
             onTouchStart={handleTouchStart}
           />
           <div
-            className="absolute -bottom-2 -right-2 w-4 h-4 bg-blue-500 rounded-full border-2 border-white shadow-md cursor-move touch-manipulation"
-            style={{ width: handleSize, height: handleSize }}
+            className="absolute -bottom-3 -right-3 bg-gradient-to-br from-primary to-primary/80 rounded-full border-2 border-white shadow-lg cursor-move touch-manipulation hover:scale-110 transition-transform duration-200 animate-scale-in"
+            style={{ width: handleSize, height: handleSize, animationDelay: '0.3s' }}
             onMouseDown={handleMouseDown}
             onTouchStart={handleTouchStart}
           />
+          
+          {/* Center drag handle for easier mobile interaction */}
+          <div
+            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-6 h-6 bg-gradient-to-br from-primary/80 to-primary/60 rounded-full border-2 border-white shadow-md cursor-move touch-manipulation hover:scale-110 transition-all duration-200 animate-scale-in opacity-80 hover:opacity-100"
+            style={{ animationDelay: '0.4s' }}
+            onMouseDown={handleMouseDown}
+            onTouchStart={handleTouchStart}
+          >
+            <div className="absolute inset-1 bg-white/30 rounded-full" />
+          </div>
         </>
       )}
 
-      {/* Gradient background for visual polish */}
+      {/* Enhanced gradient background for visual polish */}
       {isActive && (
-        <div 
-          className="absolute inset-0 -z-10 rounded-lg opacity-20"
-          style={{
-            background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.3) 0%, rgba(147, 51, 234, 0.3) 100%)',
-            filter: 'blur(8px)',
-            transform: 'scale(1.2)',
-          }}
-        />
+        <>
+          <div 
+            className="absolute inset-0 -z-10 rounded-lg opacity-20 animate-pulse-gentle"
+            style={{
+              background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.4) 0%, rgba(147, 51, 234, 0.4) 100%)',
+              filter: 'blur(12px)',
+              transform: 'scale(1.3)',
+            }}
+          />
+          <div 
+            className="absolute inset-0 -z-20 rounded-lg opacity-10"
+            style={{
+              background: `radial-gradient(circle, ${overlay.style.color}40, transparent)`,
+              filter: 'blur(20px)',
+              transform: 'scale(1.5)',
+            }}
+          />
+        </>
+      )}
+      
+      {/* Dragging state overlay */}
+      {isDragging && (
+        <div className="absolute inset-0 bg-primary/20 rounded-lg animate-pulse" />
       )}
     </div>
   );

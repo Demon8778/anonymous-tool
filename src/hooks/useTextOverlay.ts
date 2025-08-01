@@ -57,7 +57,7 @@ export function useTextOverlay(
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const containerRef = useRef<{ width: number; height: number }>({ width: 400, height: 300 });
-  const cleanupTimeoutRef = useRef<NodeJS.Timeout>();
+  const cleanupTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Validate overlay data
   const validateOverlay = useCallback((overlay: Partial<TextOverlay>): boolean => {
@@ -166,7 +166,26 @@ export function useTextOverlay(
   // Update overlay style
   const updateOverlayStyle = useCallback((id: string, style: Partial<TextStyle>) => {
     try {
-      if (!validateOverlay({ style })) {
+      // Create a temporary overlay with the style to validate
+      const tempOverlay: TextOverlay = {
+        id: 'temp',
+        text: 'temp',
+        position: { x: 0, y: 0 },
+        isDragging: false,
+        style: {
+          fontSize: 16,
+          color: '#ffffff',
+          fontFamily: 'Arial',
+          fontWeight: 'normal' as const,
+          textAlign: 'center' as const,
+          strokeColor: '#000000',
+          strokeWidth: 0,
+          opacity: 1,
+          ...style
+        }
+      };
+      
+      if (!validateOverlay(tempOverlay)) {
         setError('Invalid style data');
         return;
       }

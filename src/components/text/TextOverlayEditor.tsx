@@ -71,12 +71,12 @@ export function TextOverlayEditor({
   };
 
   return (
-    <Card className={cn('w-full h-full flex flex-col', className)}>
-      <CardHeader className="pb-3">
-        <CardTitle className="flex items-center gap-2 text-lg">
-          <Type className="w-5 h-5" />
-          Text Overlay Editor
-          <Badge variant="secondary" className="ml-auto">
+    <Card className={cn('w-full h-full flex flex-col glass shadow-xl', className)}>
+      <CardHeader className="pb-3 animate-fade-in">
+        <CardTitle className="flex items-center gap-2 text-responsive-base group">
+          <Type className="w-5 h-5 text-primary group-hover:rotate-3 transition-transform duration-300" />
+          <span className="gradient-text">Text Overlay Editor</span>
+          <Badge variant="secondary" className="ml-auto glass animate-pulse-gentle">
             {overlays.length} text{overlays.length !== 1 ? 's' : ''}
           </Badge>
         </CardTitle>
@@ -84,125 +84,138 @@ export function TextOverlayEditor({
       
       <CardContent className="flex-1 p-0">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="h-full flex flex-col">
-          <TabsList className="grid w-full grid-cols-2 mx-6">
-            <TabsTrigger value="layers" className="flex items-center gap-2">
-              <Layers className="w-4 h-4" />
-              Layers
+          <TabsList className="grid w-full grid-cols-2 mx-6 glass">
+            <TabsTrigger value="layers" className="flex items-center gap-2 transition-all duration-200 hover:scale-105 focus-ring">
+              <Layers className="w-4 h-4 transition-transform duration-200 group-hover:rotate-3" />
+              <span className="text-responsive-sm">Layers</span>
             </TabsTrigger>
-            <TabsTrigger value="style" className="flex items-center gap-2" disabled={!activeOverlay}>
-              <Settings className="w-4 h-4" />
-              Style
+            <TabsTrigger value="style" className="flex items-center gap-2 transition-all duration-200 hover:scale-105 focus-ring" disabled={!activeOverlay}>
+              <Settings className="w-4 h-4 transition-transform duration-200 group-hover:rotate-3" />
+              <span className="text-responsive-sm">Style</span>
             </TabsTrigger>
           </TabsList>
 
           {/* Layers Tab */}
-          <TabsContent value="layers" className="flex-1 px-6 pb-6">
-            <div className="space-y-4">
-              {/* Add Text Button */}
+          <TabsContent value="layers" className="flex-1 px-6 pb-6 animate-fade-in">
+            <div className="space-responsive">
+              {/* Enhanced Add Text Button */}
               <Button 
                 onClick={onOverlayAdd} 
-                className="w-full"
-                variant="outline"
+                className="w-full bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 hover-lift focus-ring shadow-lg"
+                size="lg"
               >
-                <Plus className="w-4 h-4 mr-2" />
-                Add Text Layer
+                <Plus className="w-4 h-4 mr-2 transition-transform duration-200 group-hover:rotate-90" />
+                <span className="text-responsive-sm font-semibold">Add Text Layer</span>
               </Button>
 
-              <Separator />
+              <Separator className="bg-gradient-to-r from-transparent via-border to-transparent" />
 
               {/* Text Layers List */}
-              <div className="space-y-2">
-                <Label className="text-sm font-medium">Text Layers</Label>
+              <div className="space-y-3">
+                <Label className="text-responsive-sm font-semibold text-foreground">Text Layers</Label>
                 {overlays.length === 0 ? (
-                  <div className="text-center py-8 text-muted-foreground">
-                    <Type className="w-8 h-8 mx-auto mb-2 opacity-50" />
-                    <p className="text-sm">No text layers yet</p>
-                    <p className="text-xs">Click "Add Text Layer" to get started</p>
+                  <div className="text-center py-12 text-muted-foreground animate-fade-in">
+                    <div className="inline-flex p-4 bg-gradient-to-br from-muted/50 to-muted/30 rounded-full mb-4 animate-float">
+                      <Type className="w-8 h-8 opacity-50" />
+                    </div>
+                    <p className="text-responsive-sm font-medium">No text layers yet</p>
+                    <p className="text-responsive-xs">Click "Add Text Layer" to get started</p>
                   </div>
                 ) : (
-                  <ScrollArea className="h-64">
-                    <div className="space-y-2 pr-4">
+                  <ScrollArea className="h-64 scrollbar-thin">
+                    <div className="space-y-3 pr-4">
                       {overlays.map((overlay, index) => (
                         <div
                           key={overlay.id}
                           className={cn(
-                            'p-3 rounded-lg border cursor-pointer transition-all',
-                            'hover:bg-accent/50',
+                            'p-4 rounded-lg border cursor-pointer transition-all duration-300 hover-lift focus-ring',
+                            'hover:bg-accent/50 hover:shadow-md',
                             activeOverlayId === overlay.id 
-                              ? 'border-blue-500 bg-blue-50/50 dark:bg-blue-950/20' 
-                              : 'border-border'
+                              ? 'border-primary bg-gradient-to-br from-primary/10 to-primary/5 shadow-lg ring-1 ring-primary/20' 
+                              : 'border-border glass'
                           )}
                           onClick={() => onActiveOverlayChange(overlay.id)}
+                          style={{
+                            animationDelay: `${index * 0.1}s`,
+                          }}
                         >
-                          <div className="flex items-center gap-2 mb-2">
-                            <Badge variant="outline" className="text-xs">
+                          <div className="flex items-center gap-2 mb-3">
+                            <Badge variant="outline" className="text-xs glass">
                               Layer {overlays.length - index}
                             </Badge>
                             <div className="flex gap-1 ml-auto">
                               <Button
                                 variant="ghost"
                                 size="icon"
-                                className="h-6 w-6"
+                                className="h-7 w-7 hover:bg-accent/80 hover-lift focus-ring touch-target"
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   onOverlayMoveUp(overlay.id);
                                 }}
                                 disabled={index === overlays.length - 1}
                               >
-                                <MoveUp className="w-3 h-3" />
+                                <MoveUp className="w-3 h-3 transition-transform duration-200 hover:scale-110" />
                               </Button>
                               <Button
                                 variant="ghost"
                                 size="icon"
-                                className="h-6 w-6"
+                                className="h-7 w-7 hover:bg-accent/80 hover-lift focus-ring touch-target"
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   onOverlayMoveDown(overlay.id);
                                 }}
                                 disabled={index === 0}
                               >
-                                <MoveDown className="w-3 h-3" />
+                                <MoveDown className="w-3 h-3 transition-transform duration-200 hover:scale-110" />
                               </Button>
                               <Button
                                 variant="ghost"
                                 size="icon"
-                                className="h-6 w-6"
+                                className="h-7 w-7 hover:bg-blue-50 hover:text-blue-600 hover-lift focus-ring touch-target"
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   onOverlayDuplicate(overlay.id);
                                 }}
                               >
-                                <Copy className="w-3 h-3" />
+                                <Copy className="w-3 h-3 transition-transform duration-200 hover:scale-110" />
                               </Button>
                               <Button
                                 variant="ghost"
                                 size="icon"
-                                className="h-6 w-6 text-destructive hover:text-destructive"
+                                className="h-7 w-7 text-destructive hover:text-destructive hover:bg-destructive/10 hover-lift focus-ring touch-target"
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   onOverlayRemove(overlay.id);
                                 }}
                               >
-                                <Trash2 className="w-3 h-3" />
+                                <Trash2 className="w-3 h-3 transition-transform duration-200 hover:scale-110" />
                               </Button>
                             </div>
                           </div>
                           
-                          <div className="space-y-2">
+                          <div className="space-y-3">
                             <Input
                               value={overlay.text}
                               onChange={(e) => handleTextChange(overlay.id, e.target.value)}
                               placeholder="Enter text..."
-                              className="text-sm"
+                              className="text-responsive-sm glass focus:ring-2 focus:ring-primary/20 transition-all duration-200"
                               onClick={(e) => e.stopPropagation()}
                             />
                             
-                            <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                              <span>Position: {Math.round(overlay.position.x)}%, {Math.round(overlay.position.y)}%</span>
-                              <span>•</span>
-                              <span>Size: {overlay.style.fontSize}px</span>
-                              <span>•</span>
-                              <span style={{ color: overlay.style.color }}>
+                            <div className="flex items-center gap-3 text-xs text-muted-foreground font-mono">
+                              <span className="flex items-center gap-1">
+                                <div className="w-2 h-2 rounded-full bg-blue-500" />
+                                {Math.round(overlay.position.x)}%, {Math.round(overlay.position.y)}%
+                              </span>
+                              <span className="flex items-center gap-1">
+                                <div className="w-2 h-2 rounded-full bg-green-500" />
+                                {overlay.style.fontSize}px
+                              </span>
+                              <span className="flex items-center gap-1">
+                                <div 
+                                  className="w-3 h-3 rounded-full border border-gray-300" 
+                                  style={{ backgroundColor: overlay.style.color }}
+                                />
                                 {overlay.style.color}
                               </span>
                             </div>

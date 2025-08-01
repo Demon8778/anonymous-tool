@@ -216,6 +216,12 @@ describe('useTextOverlay Hook Integration', () => {
       moveOverlayUp: jest.fn(),
       moveOverlayDown: jest.fn(),
       getOverlayById: jest.fn().mockReturnValue(mockTextOverlay),
+      error: null,
+      isLoading: false,
+      clearError: jest.fn(),
+      validateOverlay: jest.fn().mockReturnValue(true),
+      exportOverlays: jest.fn().mockReturnValue('exported-data'),
+      importOverlays: jest.fn(),
     });
   });
 

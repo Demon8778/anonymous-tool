@@ -100,55 +100,98 @@ export function LoadingIndicator({
   };
 
   const content = (
-    <div className={cn(sizeStyles.spacing, 'flex flex-col items-center text-center')}>
-      {/* Icon and Stage */}
-      <div className="flex items-center space-x-2">
-        <Icon 
+    <div className={cn(sizeStyles.spacing, 'flex flex-col items-center text-center animate-fade-in')}>
+      {/* Enhanced Icon and Stage */}
+      <div className="flex items-center space-x-3 mb-2">
+        <div className="relative">
+          <Icon 
+            className={cn(
+              sizeStyles.icon,
+              config.color,
+              stage === 'loading' || stage === 'processing' ? 'animate-spin' : '',
+              stage === 'complete' && 'animate-bounce-gentle',
+              stage === 'error' && 'animate-pulse'
+            )} 
+          />
+          {/* Glow effect for active states */}
+          {(stage === 'loading' || stage === 'processing') && (
+            <div 
+              className={cn(
+                'absolute inset-0 rounded-full opacity-30 animate-ping',
+                config.color.replace('text-', 'bg-')
+              )}
+            />
+          )}
+        </div>
+        <Badge 
+          variant="secondary" 
           className={cn(
-            sizeStyles.icon,
+            config.bgColor, 
+            config.borderColor, 
             config.color,
-            stage === 'loading' || stage === 'processing' ? 'animate-spin' : ''
-          )} 
-        />
-        <Badge variant="secondary" className={cn(config.bgColor, config.borderColor, config.color)}>
+            'glass shadow-sm animate-scale-in font-medium'
+          )}
+        >
           {config.label}
         </Badge>
       </div>
 
-      {/* Message */}
+      {/* Enhanced Message */}
       {message && (
-        <p className={cn(sizeStyles.text, 'text-muted-foreground font-medium')}>
+        <p className={cn(
+          sizeStyles.text, 
+          'text-muted-foreground font-medium leading-relaxed animate-fade-in-delay max-w-xs'
+        )}>
           {message}
         </p>
       )}
 
-      {/* Progress Bar */}
+      {/* Enhanced Progress Bar */}
       {showProgress && stage !== 'complete' && stage !== 'error' && (
-        <div className="w-full space-y-2">
-          <Progress 
-            value={progressPercentage} 
-            className="w-full"
-          />
-          <div className="flex justify-between items-center text-xs text-muted-foreground">
-            <span>{Math.round(progressPercentage)}%</span>
+        <div className="w-full space-y-3 animate-slide-up">
+          <div className="relative">
+            <Progress 
+              value={progressPercentage} 
+              className="w-full h-2 glass"
+            />
+            {/* Progress glow effect */}
+            <div 
+              className="absolute inset-0 bg-gradient-to-r from-primary/20 to-primary/40 rounded-full opacity-50 animate-pulse"
+              style={{ width: `${progressPercentage}%` }}
+            />
+          </div>
+          <div className="flex justify-between items-center text-xs text-muted-foreground font-mono">
+            <span className="flex items-center gap-1">
+              <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+              {Math.round(progressPercentage)}%
+            </span>
             {timeRemaining && timeRemaining > 0 && (
-              <span>{formatTimeRemaining(timeRemaining)} remaining</span>
+              <span className="flex items-center gap-1">
+                <div className="w-2 h-2 rounded-full bg-orange-500 animate-pulse" />
+                {formatTimeRemaining(timeRemaining)} remaining
+              </span>
             )}
           </div>
         </div>
       )}
 
-      {/* Success/Error State */}
+      {/* Enhanced Success/Error State */}
       {stage === 'complete' && (
-        <p className={cn(sizeStyles.text, 'text-green-600 font-medium')}>
-          Processing completed successfully!
-        </p>
+        <div className="text-center animate-scale-in">
+          <p className={cn(sizeStyles.text, 'text-green-600 font-semibold mb-2')}>
+            Processing completed successfully!
+          </p>
+          <div className="w-12 h-1 bg-gradient-to-r from-green-400 to-green-600 rounded-full mx-auto animate-scale-in" />
+        </div>
       )}
 
       {stage === 'error' && (
-        <p className={cn(sizeStyles.text, 'text-red-600 font-medium')}>
-          An error occurred during processing
-        </p>
+        <div className="text-center animate-scale-in">
+          <p className={cn(sizeStyles.text, 'text-red-600 font-semibold mb-2')}>
+            An error occurred during processing
+          </p>
+          <div className="w-12 h-1 bg-gradient-to-r from-red-400 to-red-600 rounded-full mx-auto animate-scale-in" />
+        </div>
       )}
     </div>
   );

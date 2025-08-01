@@ -54,9 +54,11 @@ export function ErrorRecovery({
       retryProgress: 0,
     }));
 
+    let progressInterval: NodeJS.Timeout | null = null;
+
     try {
       // Simulate progress for better UX
-      const progressInterval = setInterval(() => {
+      progressInterval = setInterval(() => {
         setRecoveryState(prev => ({
           ...prev,
           retryProgress: Math.min(prev.retryProgress + 10, 90),
@@ -65,7 +67,9 @@ export function ErrorRecovery({
 
       await onRetry();
 
-      clearInterval(progressInterval);
+      if (progressInterval) {
+        clearInterval(progressInterval);
+      }
       
       setRecoveryState(prev => ({
         ...prev,
@@ -87,7 +91,9 @@ export function ErrorRecovery({
       }, 2000);
 
     } catch (retryError) {
-      clearInterval(progressInterval);
+      if (progressInterval) {
+        clearInterval(progressInterval);
+      }
       
       setRecoveryState(prev => ({
         ...prev,
