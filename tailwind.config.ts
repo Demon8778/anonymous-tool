@@ -96,6 +96,7 @@ const config: Config = {
   			'slide-down': 'slideDown 0.5s ease-out',
   			'scale-in': 'scaleIn 0.3s ease-out',
   			'bounce-gentle': 'bounceGentle 2s infinite',
+  			'shimmer': 'shimmer 1.5s infinite',
   		},
   		keyframes: {
   			fadeIn: {
@@ -117,6 +118,10 @@ const config: Config = {
   			bounceGentle: {
   				'0%, 100%': { transform: 'translateY(0)' },
   				'50%': { transform: 'translateY(-5px)' },
+  			},
+  			shimmer: {
+  				'0%': { transform: 'translateX(-100%)' },
+  				'100%': { transform: 'translateX(100%)' },
   			},
   		},
   	}

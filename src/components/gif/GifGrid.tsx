@@ -3,11 +3,12 @@
 import React, { useState, useCallback } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { AlertCircle, Play, Pause, Search, RefreshCw } from 'lucide-react';
+import { AlertCircle, Play, Pause, Search, RefreshCw, Loader2 } from 'lucide-react';
 import { GifErrorBoundary } from '@/components/error/GifErrorBoundary';
+import { GifSkeleton, GifLoadMoreSkeleton } from '@/components/ui/gif-skeleton';
+import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
 import { validateGif } from '@/lib/utils/validation';
 import { getUserMessage, getErrorSuggestions } from '@/lib/utils/errorHandler';
 import { cn } from '@/lib/utils';
@@ -18,10 +19,14 @@ interface GifGridProps {
   onGifSelect: (gif: Gif) => void;
   selectedGifId?: string;
   isLoading?: boolean;
+  isLoadingMore?: boolean;
+  hasMore?: boolean;
+  onLoadMore?: () => Promise<void> | void;
   error?: string | Error;
   onRetry?: () => void;
   className?: string;
   onGifError?: (gif: Gif, error: Error) => void;
+  enableInfiniteScroll?: boolean;
 }
 
 interface GifCardProps {
@@ -36,6 +41,7 @@ function GifCard({ gif, isSelected, onSelect, onError }: GifCardProps) {
   const [imageError, setImageError] = useState(false);
   const [isPlaying, setIsPlaying] = useState(true);
   const [isLoading, setIsLoading] = useState(true);
+  const [hasIntersected, setHasIntersected] = useState(false);
 
   const handleSelect = useCallback(() => {
     // Validate GIF before selection
@@ -65,9 +71,28 @@ function GifCard({ gif, isSelected, onSelect, onError }: GifCardProps) {
     setIsPlaying(!isPlaying);
   }, [isPlaying]);
 
+  // Intersection observer for lazy loading
+  const observerRef = useCallback((node: HTMLDivElement | null) => {
+    if (!node) return;
+    
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting && !hasIntersected) {
+          setHasIntersected(true);
+          observer.disconnect();
+        }
+      },
+      { threshold: 0.1, rootMargin: '50px' }
+    );
+    
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, [hasIntersected]);
+
   return (
     <GifErrorBoundary type="display" onError={(error) => onError?.(gif, error)}>
       <Card 
+        ref={observerRef}
         data-gif-id={gif.id}
         className={cn(
           "group cursor-pointer transition-all duration-300 hover-lift focus-ring touch-manipulation",
@@ -92,24 +117,26 @@ function GifCard({ gif, isSelected, onSelect, onError }: GifCardProps) {
           <>
             <div className="relative aspect-square overflow-hidden bg-gradient-to-br from-muted/50 to-muted/30">
               {/* Loading skeleton */}
-              {isLoading && (
+              {(isLoading || !hasIntersected) && (
                 <div className="absolute inset-0 loading-skeleton">
                   <div className="absolute inset-0 loading-shimmer" />
                 </div>
               )}
               
-              <img
-                src={isPlaying ? gif.url : gif.preview}
-                alt={gif.title}
-                className={cn(
-                  "w-full h-full object-cover transition-all duration-500 group-hover:scale-110",
-                  isLoading && "opacity-0",
-                  !isLoading && "opacity-100"
-                )}
-                onError={handleImageError}
-                onLoad={handleImageLoad}
-                loading="lazy"
-              />
+              {hasIntersected && (
+                <img
+                  src={isPlaying ? gif.url : gif.preview}
+                  alt={gif.title}
+                  className={cn(
+                    "w-full h-full object-cover transition-all duration-500 group-hover:scale-110",
+                    isLoading && "opacity-0",
+                    !isLoading && "opacity-100"
+                  )}
+                  onError={handleImageError}
+                  onLoad={handleImageLoad}
+                  loading="lazy"
+                />
+              )}
               
               {/* Enhanced overlay controls */}
               <div className={cn(
@@ -173,29 +200,25 @@ function GifCard({ gif, isSelected, onSelect, onError }: GifCardProps) {
   );
 }
 
-function LoadingSkeleton() {
-  return (
-    <Card className="glass animate-scale-in">
-      <CardContent className="p-0">
-        <div className="aspect-square w-full rounded-t-lg loading-skeleton relative overflow-hidden">
-          <div className="absolute inset-0 loading-shimmer" />
-        </div>
-        <div className="p-3 space-y-2">
-          <div className="h-4 w-3/4 loading-skeleton rounded relative overflow-hidden">
-            <div className="absolute inset-0 loading-shimmer" />
-          </div>
-          <div className="flex justify-between">
-            <div className="h-3 w-16 loading-skeleton rounded relative overflow-hidden">
-              <div className="absolute inset-0 loading-shimmer" />
-            </div>
-            <div className="h-3 w-12 loading-skeleton rounded relative overflow-hidden">
-              <div className="absolute inset-0 loading-shimmer" />
-            </div>
-          </div>
-        </div>
-      </CardContent>
-    </Card>
-  );
+// Intersection observer trigger component for infinite scroll
+function InfiniteScrollTrigger({ onIntersect }: { onIntersect: () => void }) {
+  const observerRef = useCallback((node: HTMLDivElement | null) => {
+    if (!node) return;
+    
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          onIntersect();
+        }
+      },
+      { threshold: 0.1, rootMargin: '100px' }
+    );
+    
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, [onIntersect]);
+
+  return <div ref={observerRef} className="h-1" />;
 }
 
 export function GifGrid({
@@ -203,15 +226,30 @@ export function GifGrid({
   onGifSelect,
   selectedGifId,
   isLoading = false,
+  isLoadingMore = false,
+  hasMore = false,
+  onLoadMore,
   error,
   onRetry,
   className = "",
-  onGifError
+  onGifError,
+  enableInfiniteScroll = true
 }: GifGridProps) {
   const handleGifError = useCallback((gif: Gif, gifError: Error) => {
     console.error('GIF error:', gifError, gif);
     onGifError?.(gif, gifError);
   }, [onGifError]);
+
+  // Infinite scroll hook
+  const { isFetching, lastElementRef } = useInfiniteScroll(
+    async () => {
+      if (onLoadMore && hasMore && !isLoadingMore) {
+        await onLoadMore();
+      }
+    },
+    hasMore && enableInfiniteScroll,
+    { enabled: enableInfiniteScroll && !!onLoadMore }
+  );
 
   if (error) {
     const errorMessage = typeof error === 'string' ? error : getUserMessage(error);
@@ -254,43 +292,65 @@ export function GifGrid({
 
   return (
     <div className={cn("w-full", className)}>
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 gap-responsive">
-        {/* Loading skeletons */}
-        {isLoading && gifs?.length === 0 && (
-          <>
-            {Array.from({ length: 12 }).map((_, index) => (
-              <LoadingSkeleton key={`skeleton-${index}`} />
-            ))}
-          </>
-        )}
+      {/* Initial loading state */}
+      {isLoading && gifs?.length === 0 && (
+        <GifSkeleton count={12} />
+      )}
 
-        {/* GIF cards with staggered animation */}
-        {gifs?.map((gif, index) => (
-          <div
-            key={gif.id}
-            className="animate-fade-in"
-            style={{
-              animationDelay: `${Math.min(index * 0.05, 1)}s`,
-            }}
+      {/* GIF grid */}
+      {gifs?.length > 0 && (
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 gap-responsive">
+          {/* GIF cards with staggered animation */}
+          {gifs.map((gif, index) => {
+            const isLastItem = index === gifs.length - 1;
+            
+            return (
+              <div
+                key={gif.id}
+                ref={enableInfiniteScroll && isLastItem ? lastElementRef : undefined}
+                className="animate-fade-in"
+                style={{
+                  animationDelay: `${Math.min(index * 0.05, 1)}s`,
+                }}
+              >
+                <GifCard
+                  gif={gif}
+                  isSelected={selectedGifId === gif.id}
+                  onSelect={onGifSelect}
+                  onError={handleGifError}
+                />
+              </div>
+            );
+          })}
+
+          {/* Loading more skeletons */}
+          {(isLoadingMore || isFetching) && (
+            <GifLoadMoreSkeleton count={6} />
+          )}
+        </div>
+      )}
+
+      {/* Load more button (fallback for when infinite scroll is disabled) */}
+      {!enableInfiniteScroll && hasMore && !isLoadingMore && gifs?.length > 0 && (
+        <div className="flex justify-center mt-8">
+          <Button
+            onClick={onLoadMore}
+            disabled={isLoadingMore}
+            variant="outline"
+            size="lg"
+            className="hover-lift"
           >
-            <GifCard
-              gif={gif}
-              isSelected={selectedGifId === gif.id}
-              onSelect={onGifSelect}
-              onError={handleGifError}
-            />
-          </div>
-        ))}
-
-        {/* Additional loading skeletons when loading more */}
-        {isLoading && gifs?.length > 0 && (
-          <>
-            {Array.from({ length: 6 }).map((_, index) => (
-              <LoadingSkeleton key={`loading-more-${index}`} />
-            ))}
-          </>
-        )}
-      </div>
+            {isLoadingMore ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Loading more...
+              </>
+            ) : (
+              'Load More GIFs'
+            )}
+          </Button>
+        </div>
+      )}
 
       {/* Enhanced empty state */}
       {!isLoading && gifs?.length === 0 && !error && (

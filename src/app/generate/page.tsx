@@ -71,7 +71,11 @@ function GeneratePageContent() {
     // Search functionality
     const {
         searchResults,
+        allGifs,
         isLoading: isSearchLoading,
+        isLoadingMore,
+        hasMore,
+        loadMoreGifs,
         error: searchError,
         currentQuery,
         performSearch,
@@ -360,17 +364,22 @@ function GeneratePageContent() {
                                         Search Results
                                     </h2>
                                     <Badge variant="secondary" className="text-sm">
-                                        {searchResults.totalCount} results
+                                        {allGifs.length} of {searchResults.totalCount} results
+                                        {hasMore && ' (loading more...)'}
                                     </Badge>
                                 </div>
 
                                 <GifGrid
-                                    gifs={searchResults.results}
+                                    gifs={allGifs}
                                     onGifSelect={handleGifSelect}
                                     selectedGifId={searchSelectedGif?.id}
                                     isLoading={isSearchLoading}
+                                    isLoadingMore={isLoadingMore}
+                                    hasMore={hasMore}
+                                    onLoadMore={loadMoreGifs}
                                     error={searchError}
                                     onRetry={() => performSearch(currentQuery)}
+                                    enableInfiniteScroll={true}
                                 />
                             </div>
                         )}

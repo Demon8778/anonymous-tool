@@ -18,15 +18,19 @@ export interface UseGifSearchOptions {
 export interface UseGifSearchReturn {
   // State
   searchResults: SearchResult | null;
+  allGifs: Gif[];
   isLoading: boolean;
+  isLoadingMore: boolean;
   error: string | null;
   currentQuery: string;
   currentPage: number;
   searchHistory: SearchHistory[];
   selectedGif: Gif | null;
+  hasMore: boolean;
   
   // Actions
   performSearch: (query: string, page?: number) => Promise<void>;
+  loadMoreGifs: () => Promise<void>;
   setCurrentQuery: (query: string) => void;
   setCurrentPage: (page: number) => void;
   setSelectedGif: (gif: Gif | null) => void;
@@ -34,6 +38,7 @@ export interface UseGifSearchReturn {
   loadSearchHistory: () => void;
   clearCache: () => void;
   preloadPopularGifs: () => Promise<void>;
+  resetSearch: () => void;
   
   // Computed
   totalPages: number;
@@ -51,12 +56,15 @@ export function useGifSearch(options: UseGifSearchOptions = {}): UseGifSearchRet
 
   // State
   const [searchResults, setSearchResults] = useState<SearchResult | null>(null);
+  const [allGifs, setAllGifs] = useState<Gif[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [currentQuery, setCurrentQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [searchHistory, setSearchHistory] = useState<SearchHistory[]>([]);
   const [selectedGif, setSelectedGif] = useState<Gif | null>(null);
+  const [hasMore, setHasMore] = useState(false);
 
   // Load search history from localStorage
   const loadSearchHistory = useCallback(() => {
@@ -103,7 +111,16 @@ export function useGifSearch(options: UseGifSearchOptions = {}): UseGifSearchRet
   const performSearch = useCallback(async (query: string, page: number = 1) => {
     if (!query.trim()) return;
 
-    setIsLoading(true);
+    const isNewSearch = page === 1;
+    
+    if (isNewSearch) {
+      setIsLoading(true);
+      setAllGifs([]);
+      setCurrentPage(1);
+    } else {
+      setIsLoadingMore(true);
+    }
+    
     setError(null);
     
     try {
@@ -114,7 +131,16 @@ export function useGifSearch(options: UseGifSearchOptions = {}): UseGifSearchRet
       });
       
       setSearchResults(result);
-      saveSearchHistory(query, result.totalCount);
+      setHasMore(result.hasMore);
+      
+      if (isNewSearch) {
+        setAllGifs(result.results);
+        saveSearchHistory(query, result.totalCount);
+      } else {
+        setAllGifs(prev => [...prev, ...result.results]);
+      }
+      
+      setCurrentPage(page);
       
     } catch (err) {
       let errorMessage = 'Failed to search GIFs';
@@ -127,11 +153,35 @@ export function useGifSearch(options: UseGifSearchOptions = {}): UseGifSearchRet
       }
       
       setError(errorMessage);
-      setSearchResults(null);
+      if (isNewSearch) {
+        setSearchResults(null);
+        setAllGifs([]);
+      }
     } finally {
-      setIsLoading(false);
+      if (isNewSearch) {
+        setIsLoading(false);
+      } else {
+        setIsLoadingMore(false);
+      }
     }
   }, [itemsPerPage, saveSearchHistory]);
+
+  // Load more GIFs for infinite scrolling
+  const loadMoreGifs = useCallback(async () => {
+    if (!currentQuery || !hasMore || isLoadingMore) return;
+    
+    await performSearch(currentQuery, currentPage + 1);
+  }, [currentQuery, hasMore, isLoadingMore, currentPage, performSearch]);
+
+  // Reset search state
+  const resetSearch = useCallback(() => {
+    setSearchResults(null);
+    setAllGifs([]);
+    setCurrentPage(1);
+    setHasMore(false);
+    setError(null);
+    setSelectedGif(null);
+  }, []);
 
   // Clear search history
   const clearSearchHistory = useCallback(() => {
@@ -170,15 +220,19 @@ export function useGifSearch(options: UseGifSearchOptions = {}): UseGifSearchRet
   return {
     // State
     searchResults,
+    allGifs,
     isLoading,
+    isLoadingMore,
     error,
     currentQuery,
     currentPage,
     searchHistory,
     selectedGif,
+    hasMore,
     
     // Actions
     performSearch,
+    loadMoreGifs,
     setCurrentQuery,
     setCurrentPage,
     setSelectedGif,
@@ -186,6 +240,7 @@ export function useGifSearch(options: UseGifSearchOptions = {}): UseGifSearchRet
     loadSearchHistory,
     clearCache,
     preloadPopularGifs,
+    resetSearch,
     
     // Computed
     totalPages,
