@@ -4,6 +4,7 @@ import * as React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Menu, X, Sparkles, Search, Wand2, Share2 } from "lucide-react";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 import {
   NavigationMenu,
@@ -132,6 +133,7 @@ export function Navigation() {
               </span>
             </Link>
           </div>
+          <ThemeToggle />
         </div>
       </div>
     </header>

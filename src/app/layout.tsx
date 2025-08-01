@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Navigation } from "@/components/layout/Navigation";
 import { Breadcrumbs } from "@/components/layout/Breadcrumbs";
 import { ErrorBoundary } from "@/components/error/ErrorBoundary";
+import { ThemeProvider } from "@/components/theme-provider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -43,22 +44,29 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased bg-background text-foreground min-h-screen`}
       >
-        <ErrorBoundary level="critical">
-          <div className="relative flex min-h-screen flex-col">
-            <ErrorBoundary level="component">
-              <Navigation />
-            </ErrorBoundary>
-            <ErrorBoundary level="component">
-              <Breadcrumbs />
-            </ErrorBoundary>
-            <main className="flex-1">
-              <ErrorBoundary level="page">
-                {children}
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="dark"
+          enableSystem
+          disableTransitionOnChange
+        >
+          <ErrorBoundary level="critical">
+            <div className="relative flex min-h-screen flex-col">
+              <ErrorBoundary level="component">
+                <Navigation />
               </ErrorBoundary>
-            </main>
-          </div>
-          <Toaster />
-        </ErrorBoundary>
+              <ErrorBoundary level="component">
+                <Breadcrumbs />
+              </ErrorBoundary>
+              <main className="flex-1">
+                <ErrorBoundary level="page">
+                  {children}
+                </ErrorBoundary>
+              </main>
+            </div>
+            <Toaster />
+          </ErrorBoundary>
+        </ThemeProvider>
       </body>
     </html>
   );
