@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { Search, Loader2, AlertCircle } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -29,6 +29,21 @@ export function GifSearchForm({
 }: GifSearchFormProps) {
   const [query, setQuery] = useState(initialQuery);
   const [validationError, setValidationError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const trimmed = initialQuery.trim();
+    if (trimmed) {
+      const validation = validateSearchQuery(trimmed);
+      if (validation.isValid) {
+        const sanitizedQuery = sanitizeSearchQuery(trimmed);
+        onSearch(sanitizedQuery);
+      } else {
+        const errorMessage = validation.errors[0];
+        setValidationError(errorMessage);
+        onError?.(errorMessage);
+      }
+    }
+  }, []);
 
   const handleSubmit = useCallback((e: React.FormEvent) => {
     e.preventDefault();

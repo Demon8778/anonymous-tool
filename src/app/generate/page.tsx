@@ -29,7 +29,7 @@ import { TextOverlayEditor } from '@/components/text/TextOverlayEditor';
 import { DraggableText } from '@/components/text/DraggableText';
 import { SharingControls } from '@/components/gif/SharingControls';
 import { GifSearchForm } from '@/components/gif/GifSearchForm';
-import { GifGrid } from '@/components/gif/GifGrid';
+import { UnifiedGifGrid } from '@/components/gif/UnifiedGifGrid';
 import { GifEditorDialog } from '@/components/dialogs/GifEditorDialog';
 import { SharingDialog } from '@/components/dialogs/SharingDialog';
 import { useTextOverlay } from '@/hooks/useTextOverlay';
@@ -352,24 +352,15 @@ function GeneratePageContent() {
                         <GifSearchForm
                             onSearch={handleSearch}
                             isLoading={isSearchLoading}
-                            initialQuery={currentQuery}
+                            initialQuery={currentQuery || searchParams.get('search') || ""}
                             placeholder="Search for GIFs to customize..."
                         />
 
                         {/* Search Results */}
                         {searchResults && (
                             <div className="space-y-6">
-                                <div className="flex items-center justify-between">
-                                    <h2 className="text-2xl font-bold text-gray-900">
-                                        Search Results
-                                    </h2>
-                                    <Badge variant="secondary" className="text-sm">
-                                        {allGifs.length} of {searchResults.totalCount} results
-                                        {hasMore && ' (loading more...)'}
-                                    </Badge>
-                                </div>
 
-                                <GifGrid
+                                <UnifiedGifGrid
                                     gifs={allGifs}
                                     onGifSelect={handleGifSelect}
                                     selectedGifId={searchSelectedGif?.id}
@@ -380,6 +371,8 @@ function GeneratePageContent() {
                                     error={searchError}
                                     onRetry={() => performSearch(currentQuery)}
                                     enableInfiniteScroll={true}
+                                    defaultLayoutMode="masonry"
+                                    showLayoutToggle={true}
                                 />
                             </div>
                         )}

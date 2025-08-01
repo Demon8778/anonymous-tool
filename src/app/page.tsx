@@ -1,13 +1,13 @@
 "use client";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { 
-  Sparkles, 
-  ArrowRight, 
-  Play, 
-  CheckCircle, 
+import {
+  Sparkles,
+  ArrowRight,
+  CheckCircle,
   Search,
   Type,
   Download,
@@ -17,14 +17,22 @@ import {
   Wand2,
   Globe,
   Rocket,
-  Code,
   Zap,
   Shield,
-  Snowflake
+  Snowflake,
+  LayoutGrid
 } from "lucide-react";
 import CategoryCarousel from "@/components/gif/CategoryCarousel";
 
 export default function Home() {
+  const router = useRouter();
+
+  // Handle category selection from carousel
+  const handleCategorySelect = (searchTerm: string) => {
+    // Navigate to generate page with the search term as a query parameter
+    router.push(`/generate?search=${encodeURIComponent(searchTerm)}`);
+  };
+
   const features = [
     {
       icon: <Search className="h-8 w-8 text-primary" />,
@@ -41,15 +49,15 @@ export default function Home() {
       title: "Real-time Processing",
       description: "Generate animated GIFs with text overlays using advanced FFmpeg WASM technology"
     },
-    // {
-    //   icon: <Code className="h-8 w-8 text-primary" />,
-    //   title: "Developer Friendly",
-    //   description: "Clean APIs and extensive documentation for seamless integration into your projects"
-    // },
+    {
+      icon: <LayoutGrid className="h-8 w-8 text-primary" />,
+      title: "Masonry Layout",
+      description: "Beautiful Pinterest-style masonry layout that adapts to GIF dimensions for optimal visual flow"
+    },
     {
       icon: <Zap className="h-8 w-8 text-primary" />,
       title: "Lightning Fast",
-      description: "Optimized performance with edge computing and advanced caching for instant results"
+      description: "Optimized performance with infinite scrolling, lazy loading, and advanced caching for instant results"
     },
     {
       icon: <Shield className="h-8 w-8 text-primary" />,
@@ -69,39 +77,39 @@ export default function Home() {
     <div className="min-h-screen bg-background">
       {/* Hero Section */}
       <section className="relative overflow-hidden bg-background">
-  <div className="absolute inset-0 bg-muted/10 [background-size:50px_50px]"></div>
-  <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-primary/10"></div>
+        <div className="absolute inset-0 bg-muted/10 [background-size:50px_50px]"></div>
+        <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-primary/10"></div>
 
-  <div className="container mx-auto px-4 py-24 text-center relative z-10">
-    <div className="max-w-6xl mx-auto">
-      <Badge className="mb-6 bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 transition-all duration-300 animate-fade-in">
-        <Sparkles className="h-4 w-4 mr-2 animate-pulse-gentle" />
-        Design Your Own Experience
-      </Badge>
+        <div className="container mx-auto px-4 py-24 text-center relative z-10">
+          <div className="max-w-6xl mx-auto">
+            <Badge className="mb-6 bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 transition-all duration-300 animate-fade-in">
+              <Sparkles className="h-4 w-4 mr-2 animate-pulse-gentle" />
+              Design Your Own Experience
+            </Badge>
 
-      <h1 className="text-5xl md:text-7xl font-bold mb-6 bg-clip-text text-transparent bg-gradient-to-r from-foreground via-primary to-foreground animate-fade-in-delay">
-        Create Stunning GIFs with Custom Text
-      </h1>
+            <h1 className="text-5xl md:text-7xl font-bold mb-6 bg-clip-text text-transparent bg-gradient-to-r from-foreground via-primary to-foreground animate-fade-in-delay">
+              Create Stunning GIFs with Custom Text
+            </h1>
 
-      <p className="text-xl md:text-2xl mb-8 text-muted-foreground max-w-4xl mx-auto leading-relaxed animate-fade-in-delay">
-        Transform any GIF into a personalized masterpiece. Search millions of GIFs, add custom text overlays, and share your creations instantly with our powerful tools.
-      </p>
+            <p className="text-xl md:text-2xl mb-8 text-muted-foreground max-w-4xl mx-auto leading-relaxed animate-fade-in-delay">
+              Transform any GIF into a personalized masterpiece. Search millions of GIFs, add custom text overlays, and share your creations instantly with our powerful tools.
+            </p>
 
-      <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-16 animate-slide-up">
-        <Link href="/generate">
-          <Button 
-            size="lg" 
-            className="hover:scale-105 text-lg px-8 py-4 rounded-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-300 group bg-primary text-primary-foreground"
-          >
-            <Snowflake className="h-5 w-5 mr-2 group-hover:rotate-12 transition-transform" />
-            Start Creating
-            <ArrowRight className="h-5 w-5 ml-2 group-hover:translate-x-1 transition-transform" />
-          </Button>
-        </Link>
-      </div>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-16 animate-slide-up">
+              <Link href="/generate">
+                <Button
+                  size="lg"
+                  className="hover:scale-105 text-lg px-8 py-4 rounded-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-300 group bg-primary text-primary-foreground"
+                >
+                  <Snowflake className="h-5 w-5 mr-2 group-hover:rotate-12 transition-transform" />
+                  Start Creating
+                  <ArrowRight className="h-5 w-5 ml-2 group-hover:translate-x-1 transition-transform" />
+                </Button>
+              </Link>
+            </div>
 
-      {/* Stats */}
-      {/* <div className="grid grid-cols-2 md:grid-cols-4 gap-8 max-w-3xl mx-auto animate-slide-up-delay">
+            {/* Stats */}
+            {/* <div className="grid grid-cols-2 md:grid-cols-4 gap-8 max-w-3xl mx-auto animate-slide-up-delay">
         {stats.map((stat, index) => (
           <div key={index} className="text-center group hover:scale-105 transition-transform duration-300 p-4 rounded-lg hover:bg-muted/20">
             <div className="flex justify-center mb-3 text-primary group-hover:text-primary/80 transition-colors">
@@ -112,15 +120,15 @@ export default function Home() {
           </div>
         ))}
       </div> */}
-    </div>
-  </div>
+          </div>
+        </div>
 
-  {/* Animated background elements */}
-  <div className="absolute top-20 left-10 w-32 h-32 bg-primary/10 rounded-full blur-xl animate-float"></div>
-  <div className="absolute bottom-20 right-10 w-40 h-40 bg-muted/10 rounded-full blur-xl animate-float" style={{ animationDelay: '1s' }}></div>
-</section>
+        {/* Animated background elements */}
+        <div className="absolute top-20 left-10 w-32 h-32 bg-primary/10 rounded-full blur-xl animate-float"></div>
+        <div className="absolute bottom-20 right-10 w-40 h-40 bg-muted/10 rounded-full blur-xl animate-float" style={{ animationDelay: '1s' }}></div>
+      </section>
 
-      
+
       {/* Features Section */}
       <section className="py-20 bg-muted/30 relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-accent/5"></div>
@@ -160,15 +168,15 @@ export default function Home() {
             ))}
           </div>
         </div>
-        
+
         {/* Decorative Elements */}
         <div className="absolute top-10 left-10 w-20 h-20 bg-primary/10 rounded-full blur-xl animate-pulse-gentle"></div>
         <div className="absolute bottom-10 right-10 w-32 h-32 bg-accent/10 rounded-full blur-xl animate-pulse-gentle" style={{ animationDelay: '1s' }}></div>
-      </section>    
-      
+      </section>
+
       {/* Example GIFs Showcase */}
-      <CategoryCarousel onCategorySelect={() => {}}/>    
-      
+      <CategoryCarousel onCategorySelect={handleCategorySelect} />
+
       {/* How It Works Section */}
       <section className="py-20 bg-muted/30 relative">
         <div className="container mx-auto px-4">
@@ -184,7 +192,7 @@ export default function Home() {
               Our streamlined process makes GIF creation fast and intuitive
             </p>
           </div>
-          
+
           <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
             {[
               {
@@ -194,7 +202,7 @@ export default function Home() {
                 icon: <Search className="h-8 w-8" />
               },
               {
-                step: "2", 
+                step: "2",
                 title: "Customize Text",
                 description: "Add your custom text with full control over fonts, colors, size, and positioning.",
                 icon: <Type className="h-8 w-8" />
@@ -223,7 +231,7 @@ export default function Home() {
             ))}
           </div>
         </div>
-      </section> 
+      </section>
       {/* CTA Section */}
       <section className="py-20 bg-gradient-to-br from-primary to-primary/80 text-primary-foreground relative overflow-hidden">
         <div className="absolute inset-0 bg-background/10"></div>
@@ -241,8 +249,8 @@ export default function Home() {
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12 animate-slide-up">
               <Link href="/generate">
-                <Button 
-                  size="lg" 
+                <Button
+                  size="lg"
                   variant="secondary"
                   className="hover:scale-105 text-lg px-8 py-4 rounded-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-300 group"
                 >
@@ -254,7 +262,7 @@ export default function Home() {
               <Link href="/generate">
               </Link>
             </div>
-            
+
             {/* Trust Indicators */}
             <div className="flex flex-col sm:flex-row items-center justify-center gap-8 text-primary-foreground/80 animate-slide-up-delay">
               <div className="flex items-center gap-2">
@@ -272,12 +280,12 @@ export default function Home() {
             </div>
           </div>
         </div>
-        
+
         {/* Decorative Elements */}
         <div className="absolute top-10 left-10 w-20 h-20 bg-primary-foreground/10 rounded-full blur-xl animate-pulse"></div>
         <div className="absolute bottom-10 right-10 w-32 h-32 bg-primary-foreground/10 rounded-full blur-xl animate-pulse" style={{ animationDelay: '1s' }}></div>
-      </section>  
-      
+      </section>
+
       {/* Footer */}
       <footer className="bg-muted py-16 relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-muted via-background to-muted"></div>
@@ -305,7 +313,7 @@ export default function Home() {
                 ))}
               </div>
             </div>
-            
+
             {/* Quick Links */}
             <div>
               <h3 className="text-lg font-semibold mb-4 text-foreground">Quick Links</h3>
@@ -313,7 +321,7 @@ export default function Home() {
                 {[
                   { name: "Generate GIFs", href: "/generate" },
                 ].map((link) => (
-                  <Link 
+                  <Link
                     key={link.name}
                     href={link.href}
                     className="block text-muted-foreground hover:text-primary transition-colors duration-200 hover:translate-x-1 transform"
@@ -323,14 +331,14 @@ export default function Home() {
                 ))}
               </div>
             </div>
-            
+
             {/* Features */}
             <div>
               <h3 className="text-lg font-semibold mb-4 text-foreground">Features</h3>
               <div className="space-y-2">
                 {[
                   "Text Overlays",
-                  "Real-time Preview", 
+                  "Real-time Preview",
                   "Social Sharing",
                   "Mobile Friendly"
                 ].map((feature) => (
@@ -342,7 +350,7 @@ export default function Home() {
               </div>
             </div>
           </div>
-          
+
           {/* Bottom Bar */}
           <div className="border-t border-border pt-8 flex flex-col md:flex-row justify-between items-center">
             <div className="text-muted-foreground text-sm mb-4 md:mb-0">
@@ -356,7 +364,7 @@ export default function Home() {
             </div>
           </div>
         </div>
-        
+
         {/* Decorative Elements */}
         <div className="absolute top-10 right-10 w-20 h-20 bg-primary/10 rounded-full blur-xl"></div>
         <div className="absolute bottom-10 left-10 w-24 h-24 bg-accent/10 rounded-full blur-xl"></div>

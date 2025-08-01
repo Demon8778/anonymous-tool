@@ -5,7 +5,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { AlertCircle, Play, Pause, Search, RefreshCw, Loader2 } from 'lucide-react';
+import { AlertCircle, Play, Pause, Search, RefreshCw, Loader2, Grid, LayoutGrid } from 'lucide-react';
 import { GifErrorBoundary } from '@/components/error/GifErrorBoundary';
 import { GifSkeleton, GifLoadMoreSkeleton } from '@/components/ui/gif-skeleton';
 import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
@@ -27,6 +27,8 @@ interface GifGridProps {
   className?: string;
   onGifError?: (gif: Gif, error: Error) => void;
   enableInfiniteScroll?: boolean;
+  layoutMode?: 'masonry' | 'grid';
+  onLayoutModeChange?: (mode: 'masonry' | 'grid') => void;
 }
 
 interface GifCardProps {
@@ -233,7 +235,9 @@ export function GifGrid({
   onRetry,
   className = "",
   onGifError,
-  enableInfiniteScroll = true
+  enableInfiniteScroll = true,
+  layoutMode = 'grid',
+  onLayoutModeChange
 }: GifGridProps) {
   const handleGifError = useCallback((gif: Gif, gifError: Error) => {
     console.error('GIF error:', gifError, gif);
@@ -292,6 +296,32 @@ export function GifGrid({
 
   return (
     <div className={cn("w-full", className)}>
+      {/* Layout Mode Toggle */}
+      {onLayoutModeChange && (
+        <div className="flex justify-end mb-4">
+          <div className="flex items-center gap-2 p-1 bg-muted rounded-lg">
+            <Button
+              variant={layoutMode === 'grid' ? 'default' : 'ghost'}
+              size="sm"
+              onClick={() => onLayoutModeChange('grid')}
+              className="h-8 px-3"
+            >
+              <Grid className="h-4 w-4 mr-1" />
+              Grid
+            </Button>
+            <Button
+              variant={layoutMode === 'masonry' ? 'default' : 'ghost'}
+              size="sm"
+              onClick={() => onLayoutModeChange('masonry')}
+              className="h-8 px-3"
+            >
+              <LayoutGrid className="h-4 w-4 mr-1" />
+              Masonry
+            </Button>
+          </div>
+        </div>
+      )}
+
       {/* Initial loading state */}
       {isLoading && gifs?.length === 0 && (
         <GifSkeleton count={12} />
