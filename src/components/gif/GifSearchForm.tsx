@@ -152,10 +152,16 @@ export function GifSearchForm({
                   variant="outline"
                   className="cursor-pointer hover:bg-primary hover:text-primary-foreground hover:border-primary transition-all duration-200 text-xs"
                   onClick={() => {
-                    const searchInput = document.querySelector('input[placeholder*="Search"]') as HTMLInputElement;
-                    if (searchInput) {
-                      searchInput.value = suggestion;
-                      searchInput.focus();
+                    setValidationError(null);
+                    const validation = validateSearchQuery(suggestion);
+                    if (validation.isValid) {
+                      const sanitizedQuery = sanitizeSearchQuery(suggestion);
+                      setQuery(sanitizedQuery);
+                      onSearch(sanitizedQuery);
+                    } else {
+                      const errorMessage = validation.errors[0];
+                      setValidationError(errorMessage);
+                      onError?.(errorMessage);
                     }
                   }}
                 >

@@ -63,8 +63,9 @@ export function Navigation() {
           <NavigationMenuList>
             {navigationItems.map((item) => (
               <NavigationMenuItem key={item.href}>
-                <Link href={item.href}>
+                {/* <Link href={item.href}> */}
                   <NavigationMenuLink
+                    href={item.href}
                     className={cn(
                       navigationMenuTriggerStyle(),
                       "group relative overflow-hidden transition-all duration-300 hover:bg-accent/50 hover:scale-105 focus-ring",
@@ -78,7 +79,7 @@ export function Navigation() {
                     )}
                     <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                   </NavigationMenuLink>
-                </Link>
+                {/* </Link> */}
               </NavigationMenuItem>
             ))}
           </NavigationMenuList>
