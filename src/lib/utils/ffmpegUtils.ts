@@ -122,21 +122,8 @@ export class FFmpegProcessor {
       this.ffmpeg.on("log", this.handleLog.bind(this));
       this.ffmpeg.on("progress", this.handleProgress.bind(this));
 
-      // Load FFmpeg core modules with timeout
-      const initPromise = this.ffmpeg.load({
-        coreURL: await toBlobURL(
-          `${FFMPEG_CONFIG.baseURL}/${FFMPEG_CONFIG.coreJS}`,
-          "text/javascript"
-        ),
-        wasmURL: await toBlobURL(
-          `${FFMPEG_CONFIG.baseURL}/${FFMPEG_CONFIG.coreWasm}`,
-          "application/wasm"
-        ),
-        // workerURL: await toBlobURL(
-        //   `${FFMPEG_CONFIG.baseURL}/${FFMPEG_CONFIG.workerJS}`,
-        //   'text/javascript'
-        // ),
-      });
+      // Load FFmpeg core modules with fallback CDNs
+      const initPromise = this.loadFFmpegWithFallback();
 
       // Add timeout to initialization
       const timeoutPromise = new Promise<never>((_, reject) => {
@@ -374,6 +361,70 @@ export class FFmpegProcessor {
   }
 
   // Private methods
+
+  private async loadFFmpegWithFallback(): Promise<void> {
+    if (!this.ffmpeg) {
+      throw new Error("FFmpeg instance not created");
+    }
+
+    // Define multiple CDN sources as fallbacks
+    const cdnSources = [
+      {
+        name: "unpkg.com",
+        baseURL: "https://unpkg.com/@ffmpeg/core@0.12.6/dist/umd",
+        coreJS: "ffmpeg-core.js",
+        coreWasm: "ffmpeg-core.wasm",
+      },
+      {
+        name: "jsdelivr.net",
+        baseURL: "https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.6/dist/umd",
+        coreJS: "ffmpeg-core.js",
+        coreWasm: "ffmpeg-core.wasm",
+      },
+      {
+        name: "esm.sh",
+        baseURL: "https://esm.sh/@ffmpeg/core@0.12.6/dist/umd",
+        coreJS: "ffmpeg-core.js",
+        coreWasm: "ffmpeg-core.wasm",
+      }
+    ];
+
+    let lastError: Error | null = null;
+
+    for (const source of cdnSources) {
+      try {
+        console.log(`Attempting to load FFmpeg from ${source.name}...`);
+        
+        const coreURL = await toBlobURL(
+          `${source.baseURL}/${source.coreJS}`,
+          "text/javascript"
+        );
+        
+        const wasmURL = await toBlobURL(
+          `${source.baseURL}/${source.coreWasm}`,
+          "application/wasm"
+        );
+
+        await this.ffmpeg.load({
+          coreURL,
+          wasmURL,
+        });
+
+        console.log(`Successfully loaded FFmpeg from ${source.name}`);
+        return; // Success, exit the loop
+        
+      } catch (error) {
+        console.warn(`Failed to load FFmpeg from ${source.name}:`, error);
+        lastError = error instanceof Error ? error : new Error(`Failed to load from ${source.name}`);
+        continue; // Try next CDN
+      }
+    }
+
+    // If we get here, all CDNs failed
+    throw new Error(
+      `Failed to load FFmpeg from all CDN sources. Last error: ${lastError?.message || 'Unknown error'}`
+    );
+  }
 
   private async validateInput(
     gifUrl: string,

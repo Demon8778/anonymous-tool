@@ -2,14 +2,12 @@
 
 import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { Upload, Plus, Trash2, Download, Zap, Loader2 } from 'lucide-react';
+import { Upload, Plus, Trash2, Download, Zap, Loader2, Settings } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import GifTextOverlay from '@/components/GifTextOverlay';
-import SimpleTextControls from '@/components/SimpleTextControls';
+import TextControlsDialog from '@/components/dialogs/TextControlsDialog';
 import { getFFmpegProcessor } from '@/lib/utils/ffmpegUtils';
 
 interface TextOverlay {
@@ -30,10 +28,13 @@ function GifEditorContent() {
   const searchParams = useSearchParams();
   const [gifSrc, setGifSrc] = useState('/your.gif'); // Default placeholder
   const [isProcessing, setIsProcessing] = useState(false);
+  const [processingStatus, setProcessingStatus] = useState('Processing...');
   const [processedGifUrl, setProcessedGifUrl] = useState<string | null>(null);
   const [overlays, setOverlays] = useState<TextOverlay[]>([]);
   const [activeOverlayId, setActiveOverlayId] = useState<string | null>(null);
   const [scaleFactor, setScaleFactor] = useState(1);
+  const [isTextControlsOpen, setIsTextControlsOpen] = useState(false);
+  const [isOnline, setIsOnline] = useState(true);
 
   // Handle GIF URL from query parameter
   useEffect(() => {
@@ -50,6 +51,20 @@ function GifEditorContent() {
       }, 100);
     }
   }, [searchParams]);
+
+  // Monitor online status
+  useEffect(() => {
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
+
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
 
   const addTextOverlay = () => {
     // Limit to maximum 2 text overlays
@@ -120,7 +135,12 @@ function GifEditorContent() {
     }
   };
 
-  const processGif = async () => {
+  const processGif = async (retryCount = 0) => {
+    if (!isOnline) {
+      alert('You appear to be offline. Please check your internet connection and try again.');
+      return;
+    }
+
     if (overlays.length === 0 || gifSrc === '/your.gif') {
       alert('Please upload a GIF and add some text first');
       return;
@@ -135,8 +155,11 @@ function GifEditorContent() {
     setIsProcessing(true);
     
     try {
+      setProcessingStatus('Initializing processing engine...');
       const processor = getFFmpegProcessor();
       await processor.initialize();
+
+      setProcessingStatus('Processing GIF with text overlays...');
 
       // Get the actual GIF dimensions from the preview image
       const previewImg = document.querySelector('img[alt="GIF Preview"]') as HTMLImageElement;
@@ -166,6 +189,7 @@ function GifEditorContent() {
 
       const result = await processor.processGifWithText(gifSrc, processedOverlays);
       
+      setProcessingStatus('Finalizing...');
       // Create blob URL for processed GIF
       const blob = new Blob([result.data], { type: 'image/gif' });
       const url = URL.createObjectURL(blob);
@@ -173,7 +197,37 @@ function GifEditorContent() {
       
     } catch (error) {
       console.error('Processing failed:', error);
-      alert('Processing failed. Please try again.');
+      
+      let errorMessage = 'Processing failed. Please try again.';
+      let shouldRetry = false;
+      
+      if (error && typeof error === 'object' && 'message' in error) {
+        const errorMsg = (error as Error).message;
+        
+        if (errorMsg.includes('Failed to fetch') || errorMsg.includes('net::ERR_QUIC_PROTOCOL_ERROR')) {
+          errorMessage = 'Network error: Unable to load processing engine. Please check your internet connection and try again.';
+          shouldRetry = retryCount < 2; // Allow up to 2 retries for network errors
+        } else if (errorMsg.includes('Failed to load FFmpeg')) {
+          errorMessage = 'Failed to load video processing engine. This might be due to network issues. Please refresh the page and try again.';
+          shouldRetry = retryCount < 1; // Allow 1 retry for FFmpeg loading errors
+        } else if (errorMsg.includes('timeout')) {
+          errorMessage = 'Processing timed out. Please try with a smaller GIF or check your internet connection.';
+        } else if (errorMsg.includes('memory') || errorMsg.includes('Memory')) {
+          errorMessage = 'Not enough memory to process this GIF. Please try with a smaller file.';
+        }
+      }
+      
+      if (shouldRetry) {
+        console.log(`Retrying processing (attempt ${retryCount + 1})...`);
+        setIsProcessing(false);
+        // Wait a bit before retrying
+        setTimeout(() => {
+          processGif(retryCount + 1);
+        }, 1000);
+        return;
+      }
+      
+      alert(errorMessage);
     } finally {
       setIsProcessing(false);
     }
@@ -234,63 +288,84 @@ function GifEditorContent() {
 
         {/* Main Content - Only show if GIF is uploaded */}
         {gifSrc !== '/your.gif' && (
-          <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+          <div className="space-y-6">
             {/* Preview Panel */}
-            <div className="xl:col-span-2 space-y-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">Preview</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="w-full flex justify-center">
-                    <GifTextOverlay 
-                      gifSrc={gifSrc}
-                      overlays={overlays}
-                      activeOverlayId={activeOverlayId}
-                      onOverlayUpdate={updateOverlay}
-                      onOverlaySelect={setActiveOverlayId}
-                      onScaleFactorChange={setScaleFactor}
-                    />
-                  </div>
-                </CardContent>
-              </Card>
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg flex items-center gap-2">
+                  Preview
+                  {!isOnline && (
+                    <Badge variant="destructive" className="text-xs">
+                      Offline
+                    </Badge>
+                  )}
+                </CardTitle>
+                <p className="text-sm text-muted-foreground">
+                  <span className="hidden sm:inline">Double-click text to edit inline • Drag to move • Click to select</span>
+                  <span className="sm:hidden">Tap text to select • Double-tap to edit • Drag to move</span>
+                  {!isOnline && (
+                    <span className="block text-destructive mt-1">
+                      Internet connection required for processing
+                    </span>
+                  )}
+                </p>
+              </CardHeader>
+              <CardContent>
+                <div className="w-full flex justify-center">
+                  <GifTextOverlay 
+                    gifSrc={gifSrc}
+                    overlays={overlays}
+                    activeOverlayId={activeOverlayId}
+                    onOverlayUpdate={updateOverlay}
+                    onOverlaySelect={setActiveOverlayId}
+                    onScaleFactorChange={setScaleFactor}
+                  />
+                </div>
+              </CardContent>
+            </Card>
 
-              {/* Action Buttons */}
-              <Card>
-                <CardContent className="pt-6">
-                  <div className="space-y-3">
-                    <div className="flex flex-col sm:flex-row gap-3">
+            {/* Action Buttons */}
+            <Card>
+              <CardContent className="pt-6">
+                <div className="space-y-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                    <Button
+                      onClick={addTextOverlay}
+                      disabled={overlays.length >= 2}
+                      variant="default"
+                    >
+                      <Plus className="h-4 w-4 mr-2" />
+                      Add Text {overlays.length >= 2 && '(Max 2)'}
+                    </Button>
+                    
+                    <Button
+                      onClick={() => setIsTextControlsOpen(true)}
+                      disabled={overlays.length === 0}
+                      variant="outline"
+                    >
+                      <Settings className="h-4 w-4 mr-2" />
+                      Text Controls
+                    </Button>
+                    
+                    {activeOverlayId && (
                       <Button
-                        onClick={addTextOverlay}
-                        disabled={overlays.length >= 2}
-                        className="flex-1"
-                        variant="default"
+                        onClick={() => removeTextOverlay(activeOverlayId)}
+                        variant="destructive"
                       >
-                        <Plus className="h-4 w-4 mr-2" />
-                        Add Text {overlays.length >= 2 && '(Max 2)'}
+                        <Trash2 className="h-4 w-4 mr-2" />
+                        Remove Selected
                       </Button>
-                      {activeOverlayId && (
-                        <Button
-                          onClick={() => removeTextOverlay(activeOverlayId)}
-                          variant="destructive"
-                          className="sm:w-auto"
-                        >
-                          <Trash2 className="h-4 w-4 mr-2" />
-                          Remove
-                        </Button>
-                      )}
-                    </div>
+                    )}
                     
                     <Button
                       onClick={processGif}
-                      disabled={isProcessing || overlays.length === 0}
-                      className="w-full"
-                      size="lg"
+                      disabled={isProcessing || overlays.length === 0 || !isOnline}
+                      className="sm:col-span-2 lg:col-span-1"
                     >
                       {isProcessing ? (
                         <>
                           <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                          Processing...
+                          {processingStatus}
                         </>
                       ) : (
                         <>
@@ -299,140 +374,90 @@ function GifEditorContent() {
                         </>
                       )}
                     </Button>
-                    
-                    {processedGifUrl && (
-                      <Button
-                        onClick={downloadGif}
-                        variant="secondary"
-                        className="w-full"
-                        size="lg"
+                  </div>
+                  
+                  {processedGifUrl && (
+                    <Button
+                      onClick={downloadGif}
+                      variant="secondary"
+                      className="w-full"
+                      size="lg"
+                    >
+                      <Download className="h-4 w-4 mr-2" />
+                      Download Processed GIF
+                    </Button>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Text Layers Quick View */}
+            {overlays.length > 0 && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg flex items-center justify-between">
+                    Text Layers
+                    <Badge variant="secondary">{overlays.length}/2</Badge>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    {overlays.map((overlay, index) => (
+                      <div
+                        key={overlay.id}
+                        onClick={() => setActiveOverlayId(overlay.id)}
+                        className={`p-3 border rounded-lg cursor-pointer transition-colors ${
+                          activeOverlayId === overlay.id
+                            ? 'border-primary bg-primary/5'
+                            : 'border-border hover:border-primary/50'
+                        }`}
                       >
-                        <Download className="h-4 w-4 mr-2" />
-                        Download Processed GIF
-                      </Button>
-                    )}
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <Badge variant="outline" className="text-xs">
+                              {index === 0 ? 'First' : 'Second'}
+                            </Badge>
+                            <span className="text-sm font-medium truncate">
+                              {overlay.text || 'Empty text'}
+                            </span>
+                          </div>
+                          <Button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              removeTextOverlay(overlay.id);
+                            }}
+                            variant="ghost"
+                            size="sm"
+                            className="h-6 w-6 p-0 text-destructive hover:text-destructive"
+                          >
+                            <Trash2 className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 </CardContent>
               </Card>
+            )}
 
-              {/* Processed GIF Preview */}
-              {processedGifUrl && (
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-lg">Processed Result</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="w-full flex justify-center">
-                      <img 
-                        src={processedGifUrl} 
-                        alt="Processed GIF" 
-                        className="max-w-full h-auto border rounded-lg"
-                        style={{ display: 'block' }}
-                      />
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
-            </div>
-            
-            {/* Controls Panel */}
-            <div className="space-y-6">
+            {/* Processed GIF Preview */}
+            {processedGifUrl && (
               <Card>
                 <CardHeader>
-                  <CardTitle className="text-lg">Text Controls</CardTitle>
+                  <CardTitle className="text-lg">Processed Result</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  {activeOverlayId ? (
-                    <div className="space-y-4">
-                      {/* Text Input */}
-                      <div className="space-y-2">
-                        <Label htmlFor="text-input">Text Content</Label>
-                        <Input
-                          id="text-input"
-                          type="text"
-                          value={overlays.find(o => o.id === activeOverlayId)?.text || ''}
-                          onChange={(e) => updateOverlay(activeOverlayId, { text: e.target.value })}
-                          placeholder="Enter text..."
-                        />
-                      </div>
-                      
-                      {/* Style Controls */}
-                      <SimpleTextControls
-                        style={overlays.find(o => o.id === activeOverlayId)?.style || {
-                          fontSize: 24,
-                          color: '#ffffff',
-                          strokeColor: '#000000',
-                          strokeWidth: 2,
-                          opacity: 1,
-                          fontWeight: 'normal'
-                        }}
-                        onStyleChange={(updates) => updateOverlayStyle(activeOverlayId, updates)}
-                        scaleFactor={scaleFactor}
-                      />
-                    </div>
-                  ) : (
-                    <div className="text-center py-8 text-muted-foreground">
-                      <div className="mb-4">
-                        <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-muted flex items-center justify-center">
-                          <Plus className="h-8 w-8" />
-                        </div>
-                      </div>
-                      <p className="font-medium">No text selected</p>
-                      <p className="text-sm mt-1">Click on text in the preview or add new text</p>
-                    </div>
-                  )}
+                  <div className="w-full flex justify-center">
+                    <img 
+                      src={processedGifUrl} 
+                      alt="Processed GIF" 
+                      className="max-w-full h-auto border rounded-lg"
+                      style={{ display: 'block' }}
+                    />
+                  </div>
                 </CardContent>
               </Card>
-
-              {/* Text Layers List */}
-              {overlays.length > 0 && (
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-lg flex items-center justify-between">
-                      Text Layers
-                      <Badge variant="secondary">{overlays.length}/2</Badge>
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-2">
-                      {overlays.map((overlay, index) => (
-                        <div
-                          key={overlay.id}
-                          onClick={() => setActiveOverlayId(overlay.id)}
-                          className={`p-3 border rounded-lg cursor-pointer transition-colors ${
-                            activeOverlayId === overlay.id
-                              ? 'border-primary bg-primary/5'
-                              : 'border-border hover:border-primary/50'
-                          }`}
-                        >
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-2">
-                              <Badge variant="outline" className="text-xs">
-                                {index === 0 ? 'First' : 'Second'}
-                              </Badge>
-                              <span className="text-sm font-medium">
-                                {overlay.text || 'Empty text'}
-                              </span>
-                            </div>
-                            <Button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                removeTextOverlay(overlay.id);
-                              }}
-                              variant="ghost"
-                              size="sm"
-                              className="h-6 w-6 p-0 text-destructive hover:text-destructive"
-                            >
-                              <Trash2 className="h-3 w-3" />
-                            </Button>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
-            </div>
+            )}
           </div>
         )}
 
@@ -447,6 +472,18 @@ function GifEditorContent() {
             </p>
           </div>
         )}
+
+        {/* Text Controls Dialog */}
+        <TextControlsDialog
+          isOpen={isTextControlsOpen}
+          onClose={() => setIsTextControlsOpen(false)}
+          overlays={overlays}
+          activeOverlayId={activeOverlayId}
+          onOverlaySelect={setActiveOverlayId}
+          onOverlayStyleUpdate={updateOverlayStyle}
+          onOverlayRemove={removeTextOverlay}
+          scaleFactor={scaleFactor}
+        />
       </div>
     </div>
   );
