@@ -69,18 +69,32 @@ export class FFmpegProcessor {
     };
   }
 
-  private async loadFonts(requiredFonts: string[]): Promise<void> {
-    const uniqueFonts = [...new Set(requiredFonts)];
-    await Promise.all(
-      uniqueFonts.map(async (fontFile) => {
-        try {
-          const fontData = await fetchFile(`/fonts/${fontFile}`);
-          await this.ffmpeg?.writeFile(fontFile, fontData);
-        } catch (err) {
-          console.warn(`Font ${fontFile} could not be loaded`, err);
-        }
-      })
-    );
+  private async loadFonts(): Promise<void> {
+    // Load only the fonts that are guaranteed to exist
+    const availableFonts = ['Arial.ttf', 'Arial-Bold.ttf'];
+    
+    const loadPromises = availableFonts.map(async (fontFile) => {
+      try {
+        const fontData = await fetchFile(`/fonts/${fontFile}`);
+        await this.ffmpeg?.writeFile(fontFile, fontData);
+        console.log(`Successfully loaded font: ${fontFile}`);
+        return { fontFile, success: true };
+      } catch (err) {
+        console.error(`Failed to load font ${fontFile}:`, err);
+        return { fontFile, success: false, error: err };
+      }
+    });
+
+    const results = await Promise.all(loadPromises);
+    const failedFonts = results.filter(result => !result.success);
+    
+    if (failedFonts.length === results.length) {
+      // All fonts failed to load
+      throw new Error(`All fonts failed to load: ${failedFonts.map(f => f.fontFile).join(', ')}`);
+    } else if (failedFonts.length > 0) {
+      // Some fonts failed, but we can continue
+      console.warn(`Some fonts failed to load: ${failedFonts.map(f => f.fontFile).join(', ')}`);
+    }
   }
 
   /**
@@ -124,6 +138,16 @@ export class FFmpegProcessor {
       });
 
       await Promise.race([initPromise, timeoutPromise]);
+      
+      // Try to load fonts, but don't fail initialization if fonts can't be loaded
+      this.updateProgress(0.8, 'loading', 'Loading fonts...');
+      try {
+        await this.loadFonts();
+        console.log('Fonts loaded successfully');
+      } catch (fontError) {
+        console.warn('Font loading failed, will use system fonts as fallback:', fontError);
+        // Continue with initialization even if fonts fail to load
+      }
       
       this.isLoaded = true;
       this.updateProgress(1, 'complete', 'FFmpeg initialized successfully');
@@ -175,13 +199,46 @@ export class FFmpegProcessor {
       this.updateProgress(0.2, 'processing', 'Preparing input file...');
       await this.ffmpeg.writeFile('input.gif', gifData);
 
-      // Stage 3: Generate text overlay filters
+      // Stage 3: Generate text overlay filters and process
       this.updateProgress(0.3, 'processing', 'Generating text overlays...');
-      const textFilters = this.generateTextFilters(textOverlays);
+      
+      let processingSuccessful = false;
+      let lastError: Error | null = null;
 
-      // Stage 4: Execute FFmpeg processing
-      this.updateProgress(0.4, 'processing', 'Processing frames...');
-      await this.executeFFmpegCommand(textFilters);
+      // First attempt: Try with loaded font files
+      try {
+        const textFilters = this.generateTextFilters(textOverlays, false);
+        this.updateProgress(0.4, 'processing', 'Processing frames with custom fonts...');
+        await this.executeFFmpegCommand(textFilters);
+        processingSuccessful = true;
+      } catch (error) {
+        console.warn('Processing with custom fonts failed, trying system fonts:', error);
+        lastError = error instanceof Error ? error : new Error('Unknown error');
+        
+        // Clean up any partial output
+        try {
+          await this.ffmpeg.deleteFile('output.gif');
+        } catch (cleanupError) {
+          // Ignore cleanup errors
+        }
+      }
+
+      // Second attempt: Fallback to system fonts if custom fonts failed
+      if (!processingSuccessful) {
+        try {
+          const textFilters = this.generateTextFilters(textOverlays, true);
+          this.updateProgress(0.4, 'processing', 'Processing frames with system fonts...');
+          await this.executeFFmpegCommand(textFilters);
+          processingSuccessful = true;
+        } catch (error) {
+          console.error('Processing with system fonts also failed:', error);
+          lastError = error instanceof Error ? error : lastError;
+        }
+      }
+
+      if (!processingSuccessful) {
+        throw lastError || new Error('Both font processing attempts failed');
+      }
 
       // Stage 5: Read output file
       this.updateProgress(0.8, 'encoding', 'Encoding output...');
@@ -343,7 +400,7 @@ export class FFmpegProcessor {
     }
   }
 
-  private generateTextFilters(overlays: TextOverlay[]): string {
+  private generateTextFilters(overlays: TextOverlay[], useSystemFonts: boolean = false): string {
     const activeOverlays = overlays.filter(overlay => overlay.text && overlay.text.trim());
   
     if (activeOverlays.length === 0) {
@@ -353,35 +410,36 @@ export class FFmpegProcessor {
     const cleanHex = (hex?: string) => hex?.replace(/^#/, '') ?? 'ffffff';
   
     const filters = activeOverlays.map((overlay) => {
-      const x = `${overlay.position.x}*w/100`;
-      const y = `${overlay.position.y}*h/100`;
+      // Convert from center-based positioning (used in preview) to top-left positioning (used by FFmpeg)
+      // Our preview uses transform: translate(-50%, -50%) to center the text
+      // So we need to adjust the position to account for this
+      const fontSize = overlay.style.fontSize || TEXT_OVERLAY_DEFAULTS.fontSize;
+      const estimatedTextWidth = overlay.text.length * fontSize * 0.6; // Rough estimation
+      const estimatedTextHeight = fontSize;
+      
+      // Calculate position adjustments to match preview positioning
+      const x = `(${overlay.position.x}*w/100)-(${estimatedTextWidth}/2)`;
+      const y = `(${overlay.position.y}*h/100)-(${estimatedTextHeight}/2)`;
   
       const escapedText = escapeTextForFFmpeg(overlay.text);
-  
-      // Map font families to font files
-      const fontMap: Record<string, { regular: string; bold: string }> = {
-        'Inter': { regular: 'Inter-Regular.ttf', bold: 'Inter-Bold.ttf' },
-        'Roboto': { regular: 'Roboto-Regular.ttf', bold: 'Roboto-Bold.ttf' },
-        'Open Sans': { regular: 'OpenSans-Regular.ttf', bold: 'OpenSans-Bold.ttf' },
-        'Arial': { regular: 'Arial.ttf', bold: 'Arial-Bold.ttf' } // Assuming you've added these files
-      };
-  
-      const fontFamily = overlay.style.fontFamily || 'Arial';
-      const fontEntry = fontMap[fontFamily] || fontMap['Arial'];
-      const isBold = overlay.style.fontWeight === 'bold';
-      const fontFile = isBold ? fontEntry.bold : fontEntry.regular;
   
       const drawTextOptions = [
         `text='${escapedText}'`,
         `x=${x}`,
         `y=${y}`,
-        `fontsize=${overlay.style.fontSize || TEXT_OVERLAY_DEFAULTS.fontSize}`,
+        `fontsize=${fontSize}`,
         `fontcolor=${cleanHex(overlay.style.color || TEXT_OVERLAY_DEFAULTS.fontColor)}`,
         `bordercolor=${cleanHex(overlay.style.strokeColor || TEXT_OVERLAY_DEFAULTS.borderColor)}`,
         `borderw=${overlay.style.strokeWidth || TEXT_OVERLAY_DEFAULTS.borderWidth}`,
-        `alpha=${overlay.style.opacity ?? TEXT_OVERLAY_DEFAULTS.alpha}`,
-        `fontfile=${fontFile}`
+        `alpha=${overlay.style.opacity ?? TEXT_OVERLAY_DEFAULTS.alpha}`
       ];
+
+      // Only add font file if not using system fonts and fonts are loaded
+      if (!useSystemFonts) {
+        const isBold = overlay.style.fontWeight === 'bold';
+        const fontFile = isBold ? 'Arial-Bold.ttf' : 'Arial.ttf';
+        drawTextOptions.push(`fontfile=${fontFile}`);
+      }
   
       return `drawtext=${drawTextOptions.join(':')}`;
     });
@@ -408,15 +466,36 @@ export class FFmpegProcessor {
       command.splice(-2, 0, '-r', qualitySettings.fps.toString());
     }
 
-    // Execute with timeout
-    const execPromise = this.ffmpeg.exec(command);
-    const timeoutPromise = new Promise<never>((_, reject) => {
-      setTimeout(() => {
-        reject(new Error(ERROR_MESSAGES.PROCESSING_TIMEOUT));
-      }, PROCESSING_TIMEOUTS.processing);
-    });
+    console.log('Executing FFmpeg command:', command.join(' '));
+    console.log('Text filters:', textFilters);
 
-    await Promise.race([execPromise, timeoutPromise]);
+    try {
+      // Execute with timeout
+      const execPromise = this.ffmpeg.exec(command);
+      const timeoutPromise = new Promise<never>((_, reject) => {
+        setTimeout(() => {
+          reject(new Error(ERROR_MESSAGES.PROCESSING_TIMEOUT));
+        }, PROCESSING_TIMEOUTS.processing);
+      });
+
+      await Promise.race([execPromise, timeoutPromise]);
+      
+      // Verify output file was created and has content
+      try {
+        const outputData = await this.ffmpeg.readFile('output.gif');
+        if (!outputData || (outputData as Uint8Array).length === 0) {
+          throw new Error('FFmpeg produced an empty output file. This may be due to font or filter issues.');
+        }
+        console.log(`Output file size: ${(outputData as Uint8Array).length} bytes`);
+      } catch (readError) {
+        console.error('Failed to read output file:', readError);
+        throw new Error('FFmpeg processing failed - no output file generated');
+      }
+      
+    } catch (error) {
+      console.error('FFmpeg execution failed:', error);
+      throw error;
+    }
   }
 
   private async cleanup(files: string[]): Promise<void> {

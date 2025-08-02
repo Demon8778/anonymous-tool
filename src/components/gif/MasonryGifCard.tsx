@@ -86,7 +86,7 @@ export function MasonryGifCard({
         ref={observerRef}
         data-gif-id={item.id}
         className={cn(
-          "group cursor-pointer transition-all duration-300 hover-lift focus-ring touch-manipulation mb-4 break-inside-avoid",
+          "group cursor-pointer transition-all duration-300 hover-lift focus-ring touch-manipulation mb-2 sm:mb-3 md:mb-4 break-inside-avoid overflow-hidden p-0",
           isSelected 
             ? 'ring-2 ring-blue-500 shadow-lg bg-gradient-to-br from-blue-50 to-purple-50 dark:from-blue-950/20 dark:to-purple-950/20 scale-105' 
             : 'hover:shadow-xl glass hover-glow'
@@ -96,10 +96,10 @@ export function MasonryGifCard({
         onClick={handleSelect}
         style={{ width: columnWidth }}
       >
-        <CardContent className="p-0 relative overflow-hidden rounded-lg">
+        <div className="relative overflow-hidden">
           {imageError ? (
             <div 
-              className="bg-gradient-to-br from-muted/50 to-muted/30 flex items-center justify-center animate-fade-in"
+              className="bg-muted/20 flex items-center justify-center animate-fade-in"
               style={{ height: imageHeight }}
             >
               <div className="text-center text-muted-foreground">
@@ -111,12 +111,12 @@ export function MasonryGifCard({
           ) : (
             <>
               <div 
-                className="relative overflow-hidden bg-gradient-to-br from-muted/50 to-muted/30"
+                className="relative overflow-hidden"
                 style={{ height: imageHeight }}
               >
                 {/* Loading skeleton */}
                 {(isLoading || !hasIntersected) && (
-                  <div className="absolute inset-0 loading-skeleton">
+                  <div className="absolute inset-0 loading-skeleton bg-muted/20">
                     <div className="absolute inset-0 loading-shimmer" />
                   </div>
                 )}
@@ -126,7 +126,7 @@ export function MasonryGifCard({
                     src={isPlaying ? item.url : item.preview}
                     alt={item.title}
                     className={cn(
-                      "w-full h-full object-cover transition-all duration-500 group-hover:scale-110",
+                      "w-full h-full object-cover transition-all duration-300 group-hover:scale-105",
                       isLoading && "opacity-0",
                       !isLoading && "opacity-100"
                     )}
@@ -166,7 +166,7 @@ export function MasonryGifCard({
 
                 {/* Enhanced source badge */}
                 <div className="absolute bottom-2 left-2">
-                  <Badge variant="secondary" className="text-xs glass text-muted-foreground shadow-sm">
+                  <Badge variant="secondary" className="text-xs glass shadow-sm">
                     {item.source.toUpperCase()}
                   </Badge>
                 </div>
@@ -179,20 +179,14 @@ export function MasonryGifCard({
               </div>
 
               {/* Enhanced GIF info */}
-              <div className="p-3 space-y-2">
-                <h3 className="text-sm font-medium text-foreground truncate group-hover:text-primary transition-colors duration-200" title={item.title}>
+              <div className="p-2 sm:p-3">
+                <h3 className="text-sm font-semibold text-foreground dark:text-foreground truncate group-hover:text-primary transition-colors duration-200" title={item.title}>
                   {item.title}
                 </h3>
-                <div className="flex items-center justify-between text-xs text-muted-foreground">
-                  <span className="font-mono">{item.width} × {item.height}</span>
-                  {item.duration && (
-                    <span className="font-mono">{(item.duration / 1000).toFixed(1)}s</span>
-                  )}
-                </div>
               </div>
             </>
           )}
-        </CardContent>
+        </div>
       </Card>
     </GifErrorBoundary>
   );

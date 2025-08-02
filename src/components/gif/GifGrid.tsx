@@ -183,16 +183,16 @@ function GifCard({ gif, isSelected, onSelect, onError }: GifCardProps) {
             </div>
 
             {/* Enhanced GIF info */}
-            <div className="p-3 space-y-2">
+            <div className="p-2 sm:p-3 space-y-1 sm:space-y-2">
               <h3 className="text-sm font-medium text-foreground truncate group-hover:text-primary transition-colors duration-200" title={gif.title}>
                 {gif.title}
               </h3>
-              {/* <div className="flex items-center justify-between text-xs text-muted-foreground">
+              <div className="flex items-center justify-between text-xs text-muted-foreground">
                 <span className="font-mono">{gif.width} × {gif.height}</span>
                 {gif.duration && (
                   <span className="font-mono">{(gif.duration / 1000).toFixed(1)}s</span>
                 )}
-              </div> */}
+              </div>
             </div>
           </>
         )}
@@ -329,7 +329,7 @@ export function GifGrid({
 
       {/* GIF grid */}
       {gifs?.length > 0 && (
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 gap-responsive">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 gap-2 sm:gap-3 md:gap-4">
           {/* GIF cards with staggered animation */}
           {gifs.map((gif, index) => {
             const isLastItem = index === gifs.length - 1;

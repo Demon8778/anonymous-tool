@@ -96,7 +96,7 @@ export function MasonrySkeleton({
   const heights = generateSkeletonHeights(count, columnWidth);
 
   return (
-    <div className={cn("columns-2 sm:columns-3 md:columns-4 lg:columns-5 xl:columns-6 2xl:columns-7 gap-4", className)}>
+    <div className={cn("columns-2 sm:columns-3 md:columns-4 lg:columns-5 xl:columns-6 2xl:columns-7 gap-2 sm:gap-3 md:gap-4", className)}>
       {Array.from({ length: count }).map((_, index) => (
         <div
           key={`masonry-skeleton-${index}`}

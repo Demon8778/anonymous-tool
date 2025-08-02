@@ -56,8 +56,9 @@ export function useMasonryLayout(
     const aspectRatio = gif.width / gif.height;
     const imageHeight = actualColumnWidth / aspectRatio;
     
-    // Add padding for title and info (approximately 60px)
-    const cardPadding = 60;
+    // Add padding for title and info - responsive padding
+    const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+    const cardPadding = isMobile ? 45 : 55; // Reduced padding for mobile
     
     return Math.round(imageHeight + cardPadding);
   }, []);

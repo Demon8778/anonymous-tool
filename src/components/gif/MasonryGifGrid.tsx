@@ -55,12 +55,17 @@ export function MasonryGifGrid({
     onGifError?.(gif, gifError);
   }, [onGifError]);
 
-  // Masonry layout hook
+  // Responsive masonry layout hook with dynamic settings
+  const [responsiveSettings, setResponsiveSettings] = useState({
+    gap: 16,
+    maxColumns: 8
+  });
+
   const { columns, containerRef, recalculate } = useMasonryLayout(gifs, {
     columnWidth,
-    gap: 16,
+    gap: responsiveSettings.gap,
     minColumns: 2,
-    maxColumns: 8
+    maxColumns: responsiveSettings.maxColumns
   });
 
   // Infinite scroll hook
@@ -87,19 +92,31 @@ export function MasonryGifGrid({
     }
   }, [gifs.length, recalculate]);
 
-  // Update column width based on container size
+  // Update responsive settings and column width
   useEffect(() => {
-    const updateColumnWidth = () => {
-      if (containerRef && typeof containerRef === 'function') return;
+    const updateResponsiveSettings = () => {
+      if (typeof window === 'undefined') return;
       
+      const isMobile = window.innerWidth < 768;
+      const isTablet = window.innerWidth < 1024;
+      
+      // Optimized responsive settings for minimal gaps and maximum columns
+      const gap = isMobile ? 6 : isTablet ? 8 : 8;
+      const maxColumns = isMobile ? 3 : isTablet ? 8 : 12;
+      
+      setResponsiveSettings({ gap, maxColumns });
+      
+      // Update column width with optimized algorithm
       const container = document.querySelector('[data-masonry-container]') as HTMLElement;
       if (container) {
         const containerWidth = container.offsetWidth;
-        const gap = 16;
-        const minColumns = 2;
-        const maxColumns = 8;
+        const minColumns = isMobile ? 2 : isTablet ? 4 : 6;
         
-        const columnsFromWidth = Math.floor((containerWidth - gap) / (280 + gap));
+        // Smaller base column widths for more columns
+        const baseColumnWidth = isMobile ? 150 : isTablet ? 140 : 160;
+        
+        // Calculate optimal columns based on available space
+        const columnsFromWidth = Math.floor((containerWidth + gap) / (baseColumnWidth + gap));
         const actualColumns = Math.max(minColumns, Math.min(maxColumns, columnsFromWidth));
         const newColumnWidth = (containerWidth - (gap * (actualColumns - 1))) / actualColumns;
         
@@ -107,10 +124,13 @@ export function MasonryGifGrid({
       }
     };
 
-    updateColumnWidth();
-    window.addEventListener('resize', updateColumnWidth);
-    return () => window.removeEventListener('resize', updateColumnWidth);
-  }, [containerRef]);
+    // Initial update
+    updateResponsiveSettings();
+    
+    // Update on resize
+    window.addEventListener('resize', updateResponsiveSettings);
+    return () => window.removeEventListener('resize', updateResponsiveSettings);
+  }, []);
 
   if (error) {
     const errorMessage = typeof error === 'string' ? error : getUserMessage(error);
@@ -189,7 +209,7 @@ export function MasonryGifGrid({
         <div 
           ref={containerRef}
           data-masonry-container
-          className="flex gap-4"
+          className="flex gap-1.5 sm:gap-2 md:gap-2"
         >
           {columns.map((column, columnIndex) => (
             <div 

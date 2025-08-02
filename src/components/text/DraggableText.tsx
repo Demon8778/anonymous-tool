@@ -110,7 +110,9 @@ export function DraggableText({
     e.preventDefault();
     e.stopPropagation();
     const touch = e.touches[0];
-    handleDragStart(touch.clientX, touch.clientY);
+    if (touch) {
+      handleDragStart(touch.clientX, touch.clientY);
+    }
   }, [handleDragStart]);
 
   // Global mouse/touch move and end handlers
@@ -147,6 +149,7 @@ export function DraggableText({
 
   // Handle click to select (without dragging)
   const handleClick = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
     e.stopPropagation();
     
     // Only select if we didn't drag
@@ -178,6 +181,7 @@ export function DraggableText({
         top: `${pixelPosition.y}px`,
         transform: 'translate(-50%, -50%)',
         ...textStyles,
+        pointerEvents: 'auto', // Ensure text overlay captures pointer events
       }}
       onMouseDown={handleMouseDown}
       onTouchStart={handleTouchStart}
@@ -216,28 +220,51 @@ export function DraggableText({
       {/* Enhanced drag handles for touch devices */}
       {isActive && (
         <>
-          {/* Corner handles with better touch targets */}
+          {/* Corner handles with responsive touch targets */}
           <div
-            className="absolute -top-3 -left-3 bg-gradient-to-br from-primary to-primary/80 rounded-full border-2 border-white shadow-lg cursor-move touch-manipulation hover:scale-110 transition-transform duration-200 animate-scale-in"
-            style={{ width: handleSize, height: handleSize }}
+            className="absolute -top-2 -left-2 bg-gradient-to-br from-primary to-primary/80 rounded-full border-2 border-white shadow-lg cursor-move touch-manipulation hover:scale-110 transition-transform duration-200 animate-scale-in"
+            style={{ 
+              width: handleSize, 
+              height: handleSize,
+              minWidth: '20px',
+              minHeight: '20px'
+            }}
             onMouseDown={handleMouseDown}
             onTouchStart={handleTouchStart}
           />
           <div
-            className="absolute -top-3 -right-3 bg-gradient-to-br from-primary to-primary/80 rounded-full border-2 border-white shadow-lg cursor-move touch-manipulation hover:scale-110 transition-transform duration-200 animate-scale-in"
-            style={{ width: handleSize, height: handleSize, animationDelay: '0.1s' }}
+            className="absolute -top-2 -right-2 bg-gradient-to-br from-primary to-primary/80 rounded-full border-2 border-white shadow-lg cursor-move touch-manipulation hover:scale-110 transition-transform duration-200 animate-scale-in"
+            style={{ 
+              width: handleSize, 
+              height: handleSize, 
+              animationDelay: '0.1s',
+              minWidth: '20px',
+              minHeight: '20px'
+            }}
             onMouseDown={handleMouseDown}
             onTouchStart={handleTouchStart}
           />
           <div
-            className="absolute -bottom-3 -left-3 bg-gradient-to-br from-primary to-primary/80 rounded-full border-2 border-white shadow-lg cursor-move touch-manipulation hover:scale-110 transition-transform duration-200 animate-scale-in"
-            style={{ width: handleSize, height: handleSize, animationDelay: '0.2s' }}
+            className="absolute -bottom-2 -left-2 bg-gradient-to-br from-primary to-primary/80 rounded-full border-2 border-white shadow-lg cursor-move touch-manipulation hover:scale-110 transition-transform duration-200 animate-scale-in"
+            style={{ 
+              width: handleSize, 
+              height: handleSize, 
+              animationDelay: '0.2s',
+              minWidth: '20px',
+              minHeight: '20px'
+            }}
             onMouseDown={handleMouseDown}
             onTouchStart={handleTouchStart}
           />
           <div
-            className="absolute -bottom-3 -right-3 bg-gradient-to-br from-primary to-primary/80 rounded-full border-2 border-white shadow-lg cursor-move touch-manipulation hover:scale-110 transition-transform duration-200 animate-scale-in"
-            style={{ width: handleSize, height: handleSize, animationDelay: '0.3s' }}
+            className="absolute -bottom-2 -right-2 bg-gradient-to-br from-primary to-primary/80 rounded-full border-2 border-white shadow-lg cursor-move touch-manipulation hover:scale-110 transition-transform duration-200 animate-scale-in"
+            style={{ 
+              width: handleSize, 
+              height: handleSize, 
+              animationDelay: '0.3s',
+              minWidth: '20px',
+              minHeight: '20px'
+            }}
             onMouseDown={handleMouseDown}
             onTouchStart={handleTouchStart}
           />

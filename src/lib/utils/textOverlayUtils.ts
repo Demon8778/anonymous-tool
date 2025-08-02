@@ -167,9 +167,17 @@ export function updateTextOverlayPosition(
  * Get touch-friendly drag handle size based on device
  */
 export function getDragHandleSize(): number {
-  // Check if touch device
+  // Check if touch device and screen size
   const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
-  return isTouchDevice ? 44 : 24; // 44px for touch, 24px for mouse
+  const isMobile = window.innerWidth < 768; // Mobile breakpoint
+  
+  if (isTouchDevice && isMobile) {
+    return 32; // Smaller for mobile touch devices
+  } else if (isTouchDevice) {
+    return 40; // Medium for tablet touch devices
+  } else {
+    return 20; // Small for desktop mouse devices
+  }
 }
 
 /**

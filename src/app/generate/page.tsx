@@ -130,6 +130,14 @@ function GeneratePageContent() {
         clearAllOverlays,
     } = useTextOverlay();
 
+    // Initialize default text overlay when GIF is selected but no overlays exist
+    // (Only when not coming from GIF selection, which already adds one)
+    useEffect(() => {
+        if (state.selectedGif && overlays.length === 0 && !searchSelectedGif) {
+            addOverlay('Your Text Here', { x: 50, y: 50 });
+        }
+    }, [state.selectedGif, overlays.length, addOverlay, searchSelectedGif]);
+
     // Handle GIF processing
     const handleProcessGif = useCallback(async () => {
         if (!state.selectedGif || overlays.length === 0) {
@@ -272,14 +280,28 @@ function GeneratePageContent() {
     // Handle GIF selection from search
     const handleGifSelect = useCallback((gif: Gif) => {
         setSearchSelectedGif(gif);
-        setState(prev => ({ ...prev, selectedGif: gif }));
+        setState(prev => ({ 
+            ...prev, 
+            selectedGif: gif,
+            // Reset processing state when new GIF is selected
+            processedGif: null,
+            error: null,
+            showSuccessAnimation: false,
+            processingProgress: { progress: 0, stage: 'loading' }
+        }));
         setActiveTab('generate');
+
+        // Clear existing overlays and add a default text overlay
+        clearAllOverlays();
+        setTimeout(() => {
+            addOverlay('Your Text Here', { x: 50, y: 50 });
+        }, 100);
 
         toast({
             title: "GIF Selected",
             description: "You can now add text overlays and generate your custom GIF.",
         });
-    }, [setSearchSelectedGif, toast]);
+    }, [setSearchSelectedGif, toast, clearAllOverlays, addOverlay]);
 
     // Handle opening GIF editor dialog
     const handleOpenGifEditor = useCallback((gif: Gif) => {
@@ -371,7 +393,7 @@ function GeneratePageContent() {
                                     error={searchError}
                                     onRetry={() => performSearch(currentQuery)}
                                     enableInfiniteScroll={true}
-                                    defaultLayoutMode="grid"
+                                    defaultLayoutMode="masonry"
                                     showLayoutToggle={false}
                                 />
                             </div>
@@ -446,7 +468,12 @@ function GeneratePageContent() {
       <div
         ref={previewRef}
         className="relative aspect-video bg-muted rounded-lg overflow-hidden group"
-        onClick={() => setActiveOverlay(null)}
+        onClick={(e) => {
+          // Only deselect if clicking on the container itself, not on text overlays
+          if (e.target === e.currentTarget) {
+            setActiveOverlay(null);
+          }
+        }}
       >
         <img
           src={state.isPlaying ? state.selectedGif.url : state.selectedGif.preview}
