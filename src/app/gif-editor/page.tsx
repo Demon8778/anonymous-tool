@@ -252,10 +252,10 @@ function GifEditorContent() {
         {/* Header */}
         <div className="text-center mb-8">
           <h1 className="text-2xl sm:text-3xl font-bold text-foreground mb-2">
-            GIF Text Editor
+            GIF Text Editor - Add Custom Text to GIFs
           </h1>
-          <p className="text-muted-foreground text-sm sm:text-base">
-            Add up to 2 text overlays to your GIF
+          <p className="text-muted-foreground text-sm sm:text-base max-w-2xl mx-auto">
+            Create personalized animated GIFs by adding custom text overlays. Upload your GIF or use one from our search, customize fonts, colors, and positioning, then download your creation.
           </p>
         </div>
 

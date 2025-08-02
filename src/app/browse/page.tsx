@@ -1,8 +1,7 @@
 "use client";
 
-import React, { useState, useCallback, Suspense } from 'react';
+import React, { useCallback, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { Search, Edit } from 'lucide-react';
 
 import { GifSearchForm } from '@/components/gif/GifSearchForm';
 import { UnifiedGifGrid } from '@/components/gif/UnifiedGifGrid';
@@ -33,7 +32,7 @@ function BrowsePageContent() {
     }, [setCurrentQuery, performSearch]);
 
     // Handle GIF selection - this just navigates to gif-editor
-    const handleGifSelect = useCallback((gif: Gif) => {
+    const handleGifSelect = useCallback((_gif: Gif) => {
         // This is handled by the Edit GIF buttons in the cards
         // No selection logic needed here anymore
     }, []);
@@ -47,10 +46,10 @@ function BrowsePageContent() {
                     <div className="max-w-2xl mx-auto text-center space-y-6">
                         <div className="space-y-4">
                             <h1 className="text-3xl md:text-4xl font-bold text-foreground">
-                                Browse GIFs
+                                Browse & Search GIFs
                             </h1>
-                            <p className="text-muted-foreground text-lg">
-                                Search millions of GIFs and edit them with custom text overlays
+                            <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
+                                Discover millions of animated GIFs from Klipy. Search by keyword, emotion, or category to find the perfect GIF for your message, then add custom text overlays to make it uniquely yours.
                             </p>
                         </div>
                         

@@ -37,7 +37,7 @@ export default function Home() {
     {
       icon: <Search className="h-8 w-8 text-primary" />,
       title: "Smart GIF Search",
-      description: "Find the perfect GIF from millions of options with our intelligent search powered by Tenor and Giphy APIs"
+      description: "Find the perfect GIF from millions of options with our intelligent search powered by Klipy APIs"
     },
     {
       icon: <Type className="h-8 w-8 text-primary" />,
@@ -86,11 +86,11 @@ export default function Home() {
             </Badge>
 
             <h1 className="text-5xl md:text-7xl font-bold mb-6 bg-clip-text text-transparent bg-gradient-to-r from-foreground via-primary to-foreground animate-fade-in-delay">
-              Create Stunning GIFs with Custom Text
+              Create Stunning GIFs with Custom Text Overlays
             </h1>
 
             <p className="text-xl md:text-2xl mb-8 text-muted-foreground max-w-4xl mx-auto leading-relaxed animate-fade-in-delay">
-              Transform any GIF into a personalized masterpiece. Search millions of GIFs, add custom text overlays, and share your creations instantly with our powerful tools.
+              Transform any animated GIF into a personalized masterpiece with CompressVerse. Search millions of GIFs from Klipy, add custom text overlays with full control over fonts, colors, and positioning, then share your creations instantly across social media platforms.
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-16 animate-slide-up">
@@ -128,7 +128,7 @@ export default function Home() {
 
 
       {/* Features Section */}
-      <section className="py-20 bg-muted/30 relative overflow-hidden">
+      <section className="py-20 bg-muted/30 relative overflow-hidden" itemScope itemType="https://schema.org/SoftwareApplication">
         <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-accent/5"></div>
         <div className="container mx-auto px-4 relative">
           <div className="text-center mb-16">
@@ -136,11 +136,11 @@ export default function Home() {
               <Rocket className="h-4 w-4 mr-2" />
               Powerful Features
             </Badge>
-            <h2 className="text-4xl md:text-5xl font-bold text-foreground mb-6 bg-gradient-to-r from-foreground via-primary to-foreground bg-clip-text text-transparent animate-fade-in-delay">
-              Everything You Need to Create Amazing GIFs
+            <h2 className="text-4xl md:text-5xl font-bold text-foreground mb-6 bg-gradient-to-r from-foreground via-primary to-foreground bg-clip-text text-transparent animate-fade-in-delay" itemProp="name">
+              Everything You Need to Create Amazing GIFs with Text
             </h2>
-            <p className="text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed animate-fade-in-delay">
-              Professional-grade tools that make GIF creation simple, fast, and fun for everyone
+            <p className="text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed animate-fade-in-delay" itemProp="description">
+              Professional-grade GIF editing tools that make creating custom animated GIFs with text overlays simple, fast, and fun for content creators, marketers, and social media enthusiasts
             </p>
           </div>
           <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
@@ -196,7 +196,7 @@ export default function Home() {
               {
                 step: "1",
                 title: "Search & Select",
-                description: "Browse millions of GIFs from Tenor and Giphy. Find the perfect one for your message.",
+                description: "Browse millions of GIFs from Klipy. Find the perfect one for your message.",
                 icon: <Search className="h-8 w-8" />
               },
               {
@@ -230,6 +230,56 @@ export default function Home() {
           </div>
         </div>
       </section>
+      {/* FAQ Section */}
+      <section className="py-16 bg-background relative" itemScope itemType="https://schema.org/FAQPage">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
+              Frequently Asked Questions
+            </h2>
+            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+              Everything you need to know about creating GIFs with custom text overlays
+            </p>
+          </div>
+          
+          <div className="max-w-3xl mx-auto space-y-6">
+            {[
+              {
+                question: "How do I add text to a GIF?",
+                answer: "Simply upload your GIF or search for one using our browse feature, then click 'Add Text' to create custom text overlays. You can customize fonts, colors, positioning, and styling to match your vision."
+              },
+              {
+                question: "Is CompressVerse free to use?",
+                answer: "Yes! CompressVerse is completely free to use. You can search GIFs, add text overlays, and download your creations without any cost or registration required."
+              },
+              {
+                question: "What GIF sources do you support?",
+                answer: "We integrate with Klipy APIs to provide access to millions of high-quality animated GIFs. You can also upload your own GIF files for editing."
+              },
+              {
+                question: "Can I customize the text appearance?",
+                answer: "Absolutely! You have full control over font size, color, stroke, opacity, positioning, and font weight. Create the perfect look for your animated GIF."
+              },
+              {
+                question: "How many text overlays can I add?",
+                answer: "You can add up to 2 text overlays per GIF, giving you flexibility to create engaging content with multiple text elements."
+              }
+            ].map((faq, index) => (
+              <div key={index} className="border border-border rounded-lg p-6 bg-card" itemScope itemProp="mainEntity" itemType="https://schema.org/Question">
+                <h3 className="text-lg font-semibold text-foreground mb-3" itemProp="name">
+                  {faq.question}
+                </h3>
+                <div itemScope itemProp="acceptedAnswer" itemType="https://schema.org/Answer">
+                  <p className="text-muted-foreground leading-relaxed" itemProp="text">
+                    {faq.answer}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* CTA Section */}
       <section className="py-20 bg-gradient-to-br from-primary to-primary/80 text-primary-foreground relative overflow-hidden">
         <div className="absolute inset-0 bg-background/10"></div>

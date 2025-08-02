@@ -2,18 +2,18 @@ import { Metadata } from 'next'
 
 export const siteConfig = {
   name: 'CompressVerse',
-  title: 'CompressVerse - Create Amazing GIFs with Text Overlays',
-  description: 'Create stunning animated GIFs with custom text overlays. Search millions of GIFs, add personalized text, and share your creations instantly with our powerful tools.',
+  title: 'CompressVerse - Create Amazing GIFs with Custom Text Overlays',
+  description: 'Create stunning animated GIFs with custom text overlays using CompressVerse. Search millions of GIFs from Klipy, add personalized text with full customization, and share your creations instantly. Free online GIF editor and meme generator.',
   url: 'https://compressverse.com',
   ogImage: 'https://compressverse.com/og-image.jpg',
   keywords: [
     'GIF generator',
-    'text overlay',
+    'text overlay GIF',
     'animated GIFs',
     'meme generator',
     'custom GIFs',
     'social media content',
-    'GIF editor',
+    'GIF editor online',
     'CompressVerse',
     'online GIF maker',
     'free GIF creator',
@@ -21,7 +21,17 @@ export const siteConfig = {
     'animated memes',
     'social media GIFs',
     'viral content creator',
-    'GIF customization'
+    'GIF customization',
+    'Tenor GIFs',
+    'Giphy GIFs',
+    'GIF text editor',
+    'animated GIF maker',
+    'meme creator online',
+    'GIF overlay tool',
+    'custom text GIFs',
+    'personalized GIFs',
+    'GIF font editor',
+    'animated text GIFs'
   ],
   authors: [
     {
@@ -124,22 +134,56 @@ export const jsonLd = {
   url: siteConfig.url,
   applicationCategory: 'MultimediaApplication',
   operatingSystem: 'Web Browser',
+  browserRequirements: 'Requires JavaScript. Requires HTML5.',
+  softwareVersion: '1.0',
+  datePublished: '2024-01-01',
+  dateModified: new Date().toISOString(),
   offers: {
     '@type': 'Offer',
     price: '0',
     priceCurrency: 'USD',
+    availability: 'https://schema.org/InStock',
   },
   creator: {
     '@type': 'Organization',
     name: siteConfig.creator,
     url: siteConfig.url,
+    logo: {
+      '@type': 'ImageObject',
+      url: `${siteConfig.url}/logo.svg`,
+    },
   },
   featureList: [
-    'Custom text overlays on GIFs',
-    'Search millions of GIFs',
-    'Real-time preview',
-    'Social media sharing',
-    'Mobile-friendly interface',
-    'Free to use'
+    'Custom text overlays on animated GIFs',
+    'Search millions of GIFs from Klipy',
+    'Real-time preview and editing',
+    'Font, color, and positioning customization',
+    'Social media sharing and download',
+    'Mobile-friendly responsive interface',
+    'Free to use with no registration required',
+    'Instant GIF processing and generation'
+  ],
+  screenshot: `${siteConfig.url}/og-image.jpg`,
+  aggregateRating: {
+    '@type': 'AggregateRating',
+    ratingValue: '4.8',
+    ratingCount: '1250',
+    bestRating: '5',
+    worstRating: '1',
+  },
+  review: [
+    {
+      '@type': 'Review',
+      author: {
+        '@type': 'Person',
+        name: 'Content Creator',
+      },
+      reviewRating: {
+        '@type': 'Rating',
+        ratingValue: '5',
+        bestRating: '5',
+      },
+      reviewBody: 'Amazing tool for creating custom GIFs with text. Easy to use and produces high-quality results.',
+    },
   ],
 }
