@@ -40,15 +40,24 @@ export default function GifTextOverlay({
 
     const [scaleFactor, setScaleFactor] = useState(1);
     const [editingOverlayId, setEditingOverlayId] = useState<string | null>(null);
+    const [imageError, setImageError] = useState(false);
 
     const previewRef = useRef<HTMLImageElement>(null);
     const containerRef = useRef<HTMLDivElement>(null);
     const editInputRef = useRef<HTMLInputElement>(null);
+    
+    // Double-tap detection for mobile
+    const lastTapRef = useRef<{ time: number; overlayId: string | null }>({ time: 0, overlayId: null });
+    const DOUBLE_TAP_DELAY = 300; // milliseconds
 
     // Unified pointer event handlers for both mouse and touch
     const handlePointerDown = (e: React.PointerEvent, overlayId: string) => {
         e.stopPropagation();
-        e.preventDefault();
+        
+        // Don't prevent default on touch events to allow tap detection
+        if (e.pointerType !== 'touch') {
+            e.preventDefault();
+        }
 
         const overlay = overlays.find(o => o.id === overlayId);
         if (!overlay || !previewRef.current) return;
@@ -56,15 +65,20 @@ export default function GifTextOverlay({
         // Capture the pointer to ensure we get all subsequent events
         e.currentTarget.setPointerCapture(e.pointerId);
 
-        setIsDragging(true);
-        setDraggedOverlayId(overlayId);
+        // Add a small delay before starting drag to allow for double-tap detection
+        setTimeout(() => {
+            if (!editingOverlayId) { // Only start dragging if not editing
+                setIsDragging(true);
+                setDraggedOverlayId(overlayId);
 
-        const overlayRect = e.currentTarget.getBoundingClientRect();
+                const overlayRect = e.currentTarget.getBoundingClientRect();
 
-        setDragOffset({
-            x: e.clientX - overlayRect.left,
-            y: e.clientY - overlayRect.top
-        });
+                setDragOffset({
+                    x: e.clientX - overlayRect.left,
+                    y: e.clientY - overlayRect.top
+                });
+            }
+        }, e.pointerType === 'touch' ? 100 : 0); // Small delay for touch events
 
         onOverlaySelect?.(overlayId);
     };
@@ -126,6 +140,77 @@ export default function GifTextOverlay({
         }, 10);
     };
 
+    // Custom tap handler for mobile double-tap detection
+    const handleOverlayTap = (e: React.TouchEvent | React.MouseEvent, overlayId: string) => {
+        e.stopPropagation();
+        
+        const currentTime = Date.now();
+        const lastTap = lastTapRef.current;
+        
+        // Check if this is a double-tap
+        if (
+            lastTap.overlayId === overlayId && 
+            currentTime - lastTap.time < DOUBLE_TAP_DELAY
+        ) {
+            // Double-tap detected - start editing
+            console.log('Double-tap detected on mobile for overlay:', overlayId);
+            setEditingOverlayId(overlayId);
+            onOverlaySelect?.(overlayId);
+            
+            // Focus the input after a short delay to ensure it's rendered
+            setTimeout(() => {
+                editInputRef.current?.focus();
+                editInputRef.current?.select();
+            }, 50); // Slightly longer delay for mobile
+            
+            // Reset tap tracking
+            lastTapRef.current = { time: 0, overlayId: null };
+        } else {
+            // Single tap - just select
+            onOverlaySelect?.(overlayId);
+            
+            // Update tap tracking
+            lastTapRef.current = { time: currentTime, overlayId };
+            
+            console.log('Single tap on overlay:', overlayId, 'at time:', currentTime);
+        }
+    };
+
+    // Alternative: Long press to edit (fallback for mobile)
+    const handleLongPress = (overlayId: string) => {
+        console.log('Long press detected for overlay:', overlayId);
+        setEditingOverlayId(overlayId);
+        onOverlaySelect?.(overlayId);
+        
+        setTimeout(() => {
+            editInputRef.current?.focus();
+            editInputRef.current?.select();
+        }, 50);
+    };
+
+    // Long press detection
+    const longPressTimerRef = useRef<NodeJS.Timeout | null>(null);
+    
+    const handleTouchStart = (e: React.TouchEvent, overlayId: string) => {
+        e.stopPropagation();
+        
+        // Start long press timer
+        longPressTimerRef.current = setTimeout(() => {
+            handleLongPress(overlayId);
+        }, 500); // 500ms for long press
+    };
+
+    const handleTouchEnd = (e: React.TouchEvent, overlayId: string) => {
+        // Clear long press timer
+        if (longPressTimerRef.current) {
+            clearTimeout(longPressTimerRef.current);
+            longPressTimerRef.current = null;
+        }
+        
+        // Handle tap detection
+        handleOverlayTap(e, overlayId);
+    };
+
     const handleEditComplete = (overlayId: string, newText: string) => {
         onOverlayUpdate?.(overlayId, { text: newText });
         setEditingOverlayId(null);
@@ -164,6 +249,7 @@ export default function GifTextOverlay({
     }, [onScaleFactorChange]);
 
     const handleImageLoad = () => {
+        setImageError(false);
         updateDimensions();
     };
 
@@ -198,27 +284,78 @@ export default function GifTextOverlay({
     };
 
     return (
-        <div ref={containerRef} style={{ position: 'relative', display: 'inline-block' }}>
-            <img
-                ref={previewRef}
-                src={gifSrc}
-                alt="GIF Preview"
-                onLoad={handleImageLoad}
-                style={{ display: 'block', maxWidth: '100%', height: 'auto' }}
-            />
+        <div ref={containerRef} style={{ position: 'relative', display: 'inline-block', maxWidth: '100%' }}>
+            {imageError ? (
+                <div style={{
+                    width: '300px',
+                    height: '200px',
+                    border: '2px dashed #ccc',
+                    borderRadius: '8px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    flexDirection: 'column',
+                    backgroundColor: '#f9f9f9',
+                    color: '#666'
+                }}>
+                    <div style={{ fontSize: '48px', marginBottom: '8px' }}>🖼️</div>
+                    <div style={{ fontSize: '14px', textAlign: 'center' }}>
+                        Failed to load GIF<br />
+                        <small>Please try uploading again</small>
+                    </div>
+                </div>
+            ) : (
+                <img
+                    ref={previewRef}
+                    src={gifSrc}
+                    alt="GIF Preview"
+                    onLoad={handleImageLoad}
+                    onError={(e) => {
+                        console.error('Failed to load GIF:', gifSrc);
+                        console.error('Image error:', e);
+                        setImageError(true);
+                    }}
+                    style={{ 
+                        display: 'block', 
+                        maxWidth: '100%', 
+                        height: 'auto',
+                        border: '1px solid rgba(0,0,0,0.1)',
+                        borderRadius: '4px',
+                        position: 'relative',
+                        zIndex: 0 // Ensure image is behind overlay but visible
+                    }}
+                />
+            )}
 
             {/* Overlay container */}
+            {/* Invisible click area for deselection */}
             <div
-                className={`gif-container ${isDragging ? 'dragging' : ''}`}
                 style={{
                     position: 'absolute',
                     top: 0,
                     left: 0,
                     width: '100%',
                     height: '100%',
-                    pointerEvents: 'auto'
+                    pointerEvents: 'auto',
+                    background: 'transparent',
+                    zIndex: 1
                 }}
                 onClick={handleContainerClick}
+            />
+            
+            {/* Text overlays container */}
+            <div
+                className={`gif-overlay-container ${isDragging ? 'dragging' : ''}`}
+                style={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    width: '100%',
+                    height: '100%',
+                    pointerEvents: 'none', // Don't block clicks, only text elements should be clickable
+                    background: 'transparent',
+                    zIndex: 2
+                }}
             >
                 {/* Text Overlays */}
                 {overlays.map((overlay) => {
@@ -232,6 +369,8 @@ export default function GifTextOverlay({
                             onPointerDown={(e) => handlePointerDown(e, overlay.id)}
                             onClick={(e) => handleOverlayClick(e, overlay.id)}
                             onDoubleClick={(e) => handleOverlayDoubleClick(e, overlay.id)}
+                            onTouchStart={(e) => handleTouchStart(e, overlay.id)}
+                            onTouchEnd={(e) => handleTouchEnd(e, overlay.id)}
                             style={{
                                 position: 'absolute',
                                 top: `${overlay.position.y * scaleFactor}px`,
@@ -242,9 +381,14 @@ export default function GifTextOverlay({
                                 opacity: overlay.style.opacity,
                                 outline: activeOverlayId === overlay.id ? '2px solid #3b82f6' : 'none',
                                 outlineOffset: '2px',
+                                // Add subtle visual hint for mobile editing
+                                boxShadow: activeOverlayId === overlay.id ? 
+                                    '0 0 0 1px rgba(59, 130, 246, 0.3), 0 2px 4px rgba(0, 0, 0, 0.1)' : 
+                                    'none',
                                 minWidth: '20px',
                                 whiteSpace: 'nowrap',
-                                pointerEvents: 'auto',
+                                pointerEvents: 'auto', // Only text overlays should capture pointer events
+                                zIndex: 3, // Ensure text is above everything
                                 padding: '2px 4px',
                                 borderRadius: '2px',
                                 transition: 'outline 0.2s ease',

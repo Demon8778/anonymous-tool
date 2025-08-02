@@ -214,7 +214,12 @@
 @layer components {
   /* GIF Generator specific components */
   .gif-container {
-    @apply relative overflow-hidden rounded-lg border bg-card;
+    @apply relative overflow-hidden;
+  }
+  
+  /* Only apply background to gif containers that are not overlay containers */
+  .gif-container:not(.gif-overlay-container) {
+    @apply rounded-lg border bg-card;
   }
 
   .text-overlay {
@@ -637,10 +642,41 @@ uch-friendly styles for GIF text overlays */
 }
 
 /* Prevent text selection during drag */
+.gif-overlay-container.dragging *,
 .gif-container.dragging * {
   -webkit-user-select: none;
   -khtml-user-select: none;
   -moz-user-select: none;
   -ms-user-select: none;
   user-select: none;
+}
+/* En
+sure overlay container is transparent and doesn't block GIF */
+.gif-overlay-container {
+  background: transparent !important;
+  border: none !important;
+}/* Enh
+anced mobile touch experience for text overlays */
+@media (max-width: 768px) {
+  .gif-text-overlay {
+    /* Larger touch targets */
+    min-width: 48px;
+    min-height: 48px;
+    padding: 12px 8px;
+    
+    /* Better visual feedback */
+    transition: all 0.2s ease;
+  }
+  
+  .gif-text-overlay:active {
+    transform: scale(1.05);
+    background-color: rgba(59, 130, 246, 0.1);
+    border-radius: 4px;
+  }
+}
+
+/* Prevent text selection during touch interactions */
+.gif-text-overlay {
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
 }
