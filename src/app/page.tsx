@@ -92,7 +92,7 @@ export default function Home() {
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-16 animate-slide-up">
-              <Link href="/generate">
+              <Link href="/browse">
                 <Button
                   size="lg"
                   className="hover:scale-105 text-lg px-8 py-4 rounded-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-300 group bg-primary text-primary-foreground"

@@ -439,9 +439,6 @@ function GifEditorContent() {
         {/* Empty State - Show when no GIF is uploaded */}
         {gifSrc === '/your.gif' && (
           <div className="text-center py-16">
-            <div className="w-24 h-24 mx-auto mb-6 rounded-full bg-muted flex items-center justify-center">
-              <Upload className="h-12 w-12 text-muted-foreground" />
-            </div>
             <h3 className="text-xl font-semibold text-foreground mb-2">
               Upload a GIF to get started
             </h3>

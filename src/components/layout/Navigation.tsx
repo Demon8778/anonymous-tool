@@ -26,7 +26,7 @@ const navigationItems = [
   },
   {
     title: "Browse",
-    href: "/generate",
+    href: "/browse",
     description: "Search and browse GIFs",
     icon: Search,
   },

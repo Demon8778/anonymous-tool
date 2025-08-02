@@ -525,7 +525,7 @@ export function SharedGifDialog({
                   </div>
                 </div>
 
-                <Link href="/generate" className="block">
+                <Link href="/browse" className="block">
                   <Button 
                     className="w-full group"
                     onClick={handleClose}
