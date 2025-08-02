@@ -2,7 +2,7 @@
 
 import React, { useState, useCallback, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { Search } from 'lucide-react';
+import { Search, Edit } from 'lucide-react';
 
 import { GifSearchForm } from '@/components/gif/GifSearchForm';
 import { UnifiedGifGrid } from '@/components/gif/UnifiedGifGrid';

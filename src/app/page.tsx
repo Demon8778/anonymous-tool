@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { FloatingActionButton } from "@/components/ui/floating-action-button";
 import {
   Sparkles,
   ArrowRight,
@@ -16,7 +17,8 @@ import {
   Zap,
   Shield,
   Snowflake,
-  LayoutGrid
+  LayoutGrid,
+  Edit
 } from "lucide-react";
 import CategoryCarousel from "@/components/gif/CategoryCarousel";
 import { StructuredData } from "@/components/seo/StructuredData";
@@ -28,7 +30,7 @@ export default function Home() {
   // Handle category selection from carousel
   const handleCategorySelect = (searchTerm: string) => {
     // Navigate to browse page with the search term as a query parameter
-    router.push(`/generate?search=${encodeURIComponent(searchTerm)}`);
+    router.push(`/browse?search=${encodeURIComponent(searchTerm)}`);
   };
 
   const features = [
@@ -315,7 +317,8 @@ export default function Home() {
               <h3 className="text-lg font-semibold mb-4 text-foreground">Quick Links</h3>
               <div className="space-y-2">
                 {[
-                  { name: "Browse GIFs", href: "/generate" },
+                  { name: "Browse GIFs", href: "/browse" },
+                  { name: "GIF Editor", href: "/gif-editor" },
                 ].map((link) => (
                   <Link
                     key={link.name}
