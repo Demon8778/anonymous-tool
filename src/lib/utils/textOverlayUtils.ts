@@ -54,24 +54,27 @@ export function getTextBounds(
   style: TextStyle,
   containerWidth: number
 ): { width: number; height: number } {
+  // Use exact same font size as FFmpeg will use - no scaling
+  const fontSize = style.fontSize;
+  
   // Create a temporary canvas to measure text
   const canvas = document.createElement('canvas');
   const ctx = canvas.getContext('2d');
   
   if (!ctx) {
-    // Fallback estimation
+    // Fallback estimation using exact font size
     return {
-      width: text.length * style.fontSize * 0.6,
-      height: style.fontSize * 1.2,
+      width: text.length * fontSize * 0.6,
+      height: fontSize * 1.2,
     };
   }
 
-  ctx.font = `${style.fontWeight} ${style.fontSize}px ${style.fontFamily}`;
+  ctx.font = `${style.fontWeight} ${fontSize}px ${style.fontFamily}`;
   const metrics = ctx.measureText(text);
   
   return {
     width: metrics.width,
-    height: style.fontSize * 1.2, // Approximate height
+    height: fontSize * 1.2, // Approximate height
   };
 }
 
@@ -86,9 +89,15 @@ export function constrainPosition(
 ): Position {
   const pixelPos = positionToPixels(position, containerWidth, containerHeight);
   
-  // Constrain to container bounds
-  const constrainedX = Math.max(0, Math.min(containerWidth - textBounds.width, pixelPos.x));
-  const constrainedY = Math.max(0, Math.min(containerHeight - textBounds.height, pixelPos.y));
+  // Adjust constraints for center-based positioning
+  // Since text is positioned with transform: translate(-50%, -50%), 
+  // we need to account for half the text dimensions
+  const halfWidth = textBounds.width / 2;
+  const halfHeight = textBounds.height / 2;
+  
+  // Constrain to container bounds with center-based positioning
+  const constrainedX = Math.max(halfWidth, Math.min(containerWidth - halfWidth, pixelPos.x));
+  const constrainedY = Math.max(halfHeight, Math.min(containerHeight - halfHeight, pixelPos.y));
   
   return pixelsToPosition(constrainedX, constrainedY, containerWidth, containerHeight);
 }
@@ -101,11 +110,16 @@ export function getTextTransform(position: Position): string {
 }
 
 /**
- * Generate CSS styles for text overlay
+ * Generate CSS styles for text overlay - NO SCALING
+ * Uses exact same font size as will be used in final processing
  */
-export function getTextStyles(style: TextStyle): React.CSSProperties {
+export function getTextStyles(style: TextStyle, containerWidth?: number): React.CSSProperties {
+  // Use the exact same font size that FFmpeg will use
+  // No scaling - what you see is what you get
+  const fontSize = style.fontSize;
+  
   return {
-    fontSize: `${style.fontSize}px`,
+    fontSize: `${fontSize}px`,
     fontFamily: style.fontFamily,
     fontWeight: style.fontWeight,
     color: style.color,
@@ -127,12 +141,16 @@ export function createTextOverlay(
   text: string = 'New Text',
   position: Position = { x: 50, y: 50 }
 ): TextOverlay {
+  // Use a moderate font size that works well across different GIF sizes
+  // This exact size will be used in both preview and final output
+  const defaultFontSize = 24;
+  
   return {
     id: `text-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
     text,
     position,
     style: {
-      fontSize: 24,
+      fontSize: defaultFontSize,
       fontFamily: 'Arial',
       color: '#ffffff',
       strokeColor: '#000000',
@@ -154,8 +172,14 @@ export function updateTextOverlayPosition(
   containerWidth: number,
   containerHeight: number
 ): TextOverlay {
-  const textBounds = getTextBounds(overlay.text, overlay.style, containerWidth);
-  const constrainedPosition = constrainPosition(newPosition, textBounds, containerWidth, containerHeight);
+  // CRITICAL: Use percentage-based positioning only
+  // The percentage coordinates will be applied to both preview and final GIF
+  // This ensures consistent positioning regardless of container vs GIF size differences
+  
+  const constrainedPosition = {
+    x: Math.max(5, Math.min(95, newPosition.x)), // Keep some margin from edges
+    y: Math.max(5, Math.min(95, newPosition.y))  // Keep some margin from edges
+  };
   
   return {
     ...overlay,

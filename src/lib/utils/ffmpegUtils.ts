@@ -2,11 +2,11 @@
  * FFmpeg WASM utility service for GIF processing with text overlays
  */
 
-import { FFmpeg } from '@ffmpeg/ffmpeg';
-import { toBlobURL, fetchFile } from '@ffmpeg/util';
-import type { TextOverlay } from '../types/textOverlay';
-import type { ProcessingProgress } from '../types/gif';
-import type { ProcessingError } from '../types/api';
+import { FFmpeg } from "@ffmpeg/ffmpeg";
+import { toBlobURL, fetchFile } from "@ffmpeg/util";
+import type { TextOverlay } from "../types/textOverlay";
+import type { ProcessingProgress } from "../types/gif";
+import type { ProcessingError } from "../types/api";
 import {
   FFMPEG_CONFIG,
   QUALITY_SETTINGS,
@@ -17,17 +17,17 @@ import {
   PROCESSING_STAGES,
   ERROR_MESSAGES,
   MEMORY_SETTINGS,
-} from '../constants/ffmpeg';
+} from "../constants/ffmpeg";
 import {
   escapeTextForFFmpeg,
   validateOverlayPosition,
   estimateMemoryUsage,
   generateProcessingId,
-} from './ffmpegHelpers';
+} from "./ffmpegHelpers";
 
 export interface FFmpegProcessorOptions {
-  quality?: 'low' | 'medium' | 'high';
-  outputFormat?: 'gif' | 'mp4' | 'webm';
+  quality?: "low" | "medium" | "high";
+  outputFormat?: "gif" | "mp4" | "webm";
   maxMemoryUsage?: number;
   enableProgress?: boolean;
 }
@@ -53,7 +53,7 @@ export class FFmpegProcessor {
   private isProcessing = false;
   private currentProgress: ProcessingProgress = {
     progress: 0,
-    stage: 'loading',
+    stage: "loading",
   };
   private progressCallback?: (progress: ProcessingProgress) => void;
   private processingStartTime = 0;
@@ -61,8 +61,8 @@ export class FFmpegProcessor {
 
   constructor(private options: FFmpegProcessorOptions = {}) {
     this.options = {
-      quality: 'medium',
-      outputFormat: 'gif',
+      quality: "medium",
+      outputFormat: "gif",
       maxMemoryUsage: MEMORY_SETTINGS.maxMemoryUsage,
       enableProgress: true,
       ...options,
@@ -71,8 +71,8 @@ export class FFmpegProcessor {
 
   private async loadFonts(): Promise<void> {
     // Load only the fonts that are guaranteed to exist
-    const availableFonts = ['Arial.ttf', 'Arial-Bold.ttf'];
-    
+    const availableFonts = ["Arial.ttf", "Arial-Bold.ttf"];
+
     const loadPromises = availableFonts.map(async (fontFile) => {
       try {
         const fontData = await fetchFile(`/fonts/${fontFile}`);
@@ -86,14 +86,22 @@ export class FFmpegProcessor {
     });
 
     const results = await Promise.all(loadPromises);
-    const failedFonts = results.filter(result => !result.success);
-    
+    const failedFonts = results.filter((result) => !result.success);
+
     if (failedFonts.length === results.length) {
       // All fonts failed to load
-      throw new Error(`All fonts failed to load: ${failedFonts.map(f => f.fontFile).join(', ')}`);
+      throw new Error(
+        `All fonts failed to load: ${failedFonts
+          .map((f) => f.fontFile)
+          .join(", ")}`
+      );
     } else if (failedFonts.length > 0) {
       // Some fonts failed, but we can continue
-      console.warn(`Some fonts failed to load: ${failedFonts.map(f => f.fontFile).join(', ')}`);
+      console.warn(
+        `Some fonts failed to load: ${failedFonts
+          .map((f) => f.fontFile)
+          .join(", ")}`
+      );
     }
   }
 
@@ -106,23 +114,23 @@ export class FFmpegProcessor {
     }
 
     try {
-      this.updateProgress(0, 'loading', 'Initializing FFmpeg...');
-      
+      this.updateProgress(0, "loading", "Initializing FFmpeg...");
+
       this.ffmpeg = new FFmpeg();
-      
+
       // Set up event listeners for progress tracking and logging
-      this.ffmpeg.on('log', this.handleLog.bind(this));
-      this.ffmpeg.on('progress', this.handleProgress.bind(this));
+      this.ffmpeg.on("log", this.handleLog.bind(this));
+      this.ffmpeg.on("progress", this.handleProgress.bind(this));
 
       // Load FFmpeg core modules with timeout
       const initPromise = this.ffmpeg.load({
         coreURL: await toBlobURL(
           `${FFMPEG_CONFIG.baseURL}/${FFMPEG_CONFIG.coreJS}`,
-          'text/javascript'
+          "text/javascript"
         ),
         wasmURL: await toBlobURL(
           `${FFMPEG_CONFIG.baseURL}/${FFMPEG_CONFIG.coreWasm}`,
-          'application/wasm'
+          "application/wasm"
         ),
         // workerURL: await toBlobURL(
         //   `${FFMPEG_CONFIG.baseURL}/${FFMPEG_CONFIG.workerJS}`,
@@ -138,24 +146,34 @@ export class FFmpegProcessor {
       });
 
       await Promise.race([initPromise, timeoutPromise]);
-      
+
       // Try to load fonts, but don't fail initialization if fonts can't be loaded
-      this.updateProgress(0.8, 'loading', 'Loading fonts...');
+      this.updateProgress(0.8, "loading", "Loading fonts...");
       try {
         await this.loadFonts();
-        console.log('Fonts loaded successfully');
+        console.log("Fonts loaded successfully");
       } catch (fontError) {
-        console.warn('Font loading failed, will use system fonts as fallback:', fontError);
+        console.warn(
+          "Font loading failed, will use system fonts as fallback:",
+          fontError
+        );
         // Continue with initialization even if fonts fail to load
       }
-      
+
       this.isLoaded = true;
-      this.updateProgress(1, 'complete', 'FFmpeg initialized successfully');
-      
+      this.updateProgress(1, "complete", "FFmpeg initialized successfully");
     } catch (error) {
       this.isLoaded = false;
-      const errorMessage = error instanceof Error ? error.message : ERROR_MESSAGES.INITIALIZATION_FAILED;
-      throw this.createProcessingError('processing_error', errorMessage, true, true);
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : ERROR_MESSAGES.INITIALIZATION_FAILED;
+      throw this.createProcessingError(
+        "processing_error",
+        errorMessage,
+        true,
+        true
+      );
     }
   }
 
@@ -168,7 +186,7 @@ export class FFmpegProcessor {
   ): Promise<ProcessingResult> {
     if (!this.isLoaded || !this.ffmpeg) {
       throw this.createProcessingError(
-        'processing_error',
+        "processing_error",
         ERROR_MESSAGES.INITIALIZATION_FAILED,
         true,
         false
@@ -177,8 +195,8 @@ export class FFmpegProcessor {
 
     if (this.isProcessing) {
       throw this.createProcessingError(
-        'processing_error',
-        'Another processing operation is already in progress',
+        "processing_error",
+        "Another processing operation is already in progress",
         false,
         true
       );
@@ -192,61 +210,47 @@ export class FFmpegProcessor {
       await this.validateInput(gifUrl, textOverlays);
 
       // Stage 1: Load input file
-      this.updateProgress(0.1, 'loading', 'Loading input GIF...');
+      this.updateProgress(0.1, "loading", "Loading input GIF...");
       const gifData = await this.loadInputFile(gifUrl);
-      
+
       // Stage 2: Write input to FFmpeg filesystem
-      this.updateProgress(0.2, 'processing', 'Preparing input file...');
-      await this.ffmpeg.writeFile('input.gif', gifData);
+      this.updateProgress(0.2, "processing", "Preparing input file...");
+      await this.ffmpeg.writeFile("input.gif", gifData);
 
       // Stage 3: Generate text overlay filters and process
-      this.updateProgress(0.3, 'processing', 'Generating text overlays...');
-      
+      this.updateProgress(0.3, "processing", "Generating text overlays...");
+
       let processingSuccessful = false;
       let lastError: Error | null = null;
 
-      // First attempt: Try with loaded font files
+      // SIMPLE APPROACH: Try with fonts first, fallback to system fonts
       try {
-        const textFilters = this.generateTextFilters(textOverlays, false);
-        this.updateProgress(0.4, 'processing', 'Processing frames with custom fonts...');
+        const textFilters = this.generateSimpleTextFilters(textOverlays, false);
+        this.updateProgress(0.4, "processing", "Processing text overlays with fonts...");
         await this.executeFFmpegCommand(textFilters);
         processingSuccessful = true;
       } catch (error) {
-        console.warn('Processing with custom fonts failed, trying system fonts:', error);
-        lastError = error instanceof Error ? error : new Error('Unknown error');
+        console.warn("Font processing failed, trying system fonts:", error);
         
-        // Clean up any partial output
         try {
-          await this.ffmpeg.deleteFile('output.gif');
-        } catch (cleanupError) {
-          // Ignore cleanup errors
-        }
-      }
-
-      // Second attempt: Fallback to system fonts if custom fonts failed
-      if (!processingSuccessful) {
-        try {
-          const textFilters = this.generateTextFilters(textOverlays, true);
-          this.updateProgress(0.4, 'processing', 'Processing frames with system fonts...');
+          const textFilters = this.generateSimpleTextFilters(textOverlays, true);
+          this.updateProgress(0.4, "processing", "Processing text overlays with system fonts...");
           await this.executeFFmpegCommand(textFilters);
           processingSuccessful = true;
-        } catch (error) {
-          console.error('Processing with system fonts also failed:', error);
-          lastError = error instanceof Error ? error : lastError;
+        } catch (systemError) {
+          console.error("System font processing also failed:", systemError);
+          lastError = systemError instanceof Error ? systemError : new Error("Unknown error");
+          throw lastError;
         }
-      }
-
-      if (!processingSuccessful) {
-        throw lastError || new Error('Both font processing attempts failed');
       }
 
       // Stage 5: Read output file
-      this.updateProgress(0.8, 'encoding', 'Encoding output...');
-      const outputData = await this.ffmpeg.readFile('output.gif');
+      this.updateProgress(0.8, "encoding", "Encoding output...");
+      const outputData = await this.ffmpeg.readFile("output.gif");
 
       // Stage 6: Cleanup and prepare result
-      this.updateProgress(0.9, 'encoding', 'Finalizing...');
-      await this.cleanup(['input.gif', 'output.gif', 'palette.png']);
+      this.updateProgress(0.9, "encoding", "Finalizing...");
+      await this.cleanup(["input.gif", "output.gif", "palette.png"]);
 
       const result: ProcessingResult = {
         data: outputData as Uint8Array,
@@ -258,23 +262,22 @@ export class FFmpegProcessor {
         },
       };
 
-      this.updateProgress(1, 'complete', 'Processing complete');
+      this.updateProgress(1, "complete", "Processing complete");
       return result;
-
     } catch (error) {
-      await this.cleanup(['input.gif', 'output.gif', 'palette.png']);
-      
+      await this.cleanup(["input.gif", "output.gif", "palette.png"]);
+
       if (error instanceof Error) {
         throw this.createProcessingError(
-          'processing_error',
+          "processing_error",
           error.message,
           true,
           true
         );
       }
-      
+
       throw this.createProcessingError(
-        'processing_error',
+        "processing_error",
         ERROR_MESSAGES.UNKNOWN_ERROR,
         false,
         true
@@ -308,9 +311,9 @@ export class FFmpegProcessor {
 
     try {
       // FFmpeg doesn't have a direct cancel method, so we'll clean up
-      await this.cleanup(['input.gif', 'output.gif', 'palette.png']);
+      await this.cleanup(["input.gif", "output.gif", "palette.png"]);
       this.isProcessing = false;
-      this.updateProgress(0, 'complete', 'Processing cancelled');
+      this.updateProgress(0, "complete", "Processing cancelled");
     } catch (error) {
       // Ignore cleanup errors during cancellation
       this.isProcessing = false;
@@ -331,7 +334,9 @@ export class FFmpegProcessor {
     return {
       current: this.memoryUsage,
       max: this.options.maxMemoryUsage || MEMORY_SETTINGS.maxMemoryUsage,
-      percentage: this.memoryUsage / (this.options.maxMemoryUsage || MEMORY_SETTINGS.maxMemoryUsage),
+      percentage:
+        this.memoryUsage /
+        (this.options.maxMemoryUsage || MEMORY_SETTINGS.maxMemoryUsage),
     };
   }
 
@@ -341,13 +346,13 @@ export class FFmpegProcessor {
   async dispose(): Promise<void> {
     if (this.ffmpeg && this.isLoaded) {
       try {
-        await this.cleanup(['input.gif', 'output.gif', 'palette.png']);
+        await this.cleanup(["input.gif", "output.gif", "palette.png"]);
         this.ffmpeg.terminate();
       } catch (error) {
         // Ignore cleanup errors during disposal
       }
     }
-    
+
     this.ffmpeg = null;
     this.isLoaded = false;
     this.isProcessing = false;
@@ -356,27 +361,36 @@ export class FFmpegProcessor {
 
   // Private methods
 
-  private async validateInput(gifUrl: string, textOverlays: TextOverlay[]): Promise<void> {
-    if (!gifUrl || typeof gifUrl !== 'string') {
-      throw new Error('Invalid GIF URL provided');
+  private async validateInput(
+    gifUrl: string,
+    textOverlays: TextOverlay[]
+  ): Promise<void> {
+    if (!gifUrl || typeof gifUrl !== "string") {
+      throw new Error("Invalid GIF URL provided");
     }
 
     if (!Array.isArray(textOverlays)) {
-      throw new Error('Invalid text overlays provided');
+      throw new Error("Invalid text overlays provided");
     }
 
     // Validate text overlays
     for (const overlay of textOverlays) {
-      if (!overlay.text || typeof overlay.text !== 'string') {
+      if (!overlay.text || typeof overlay.text !== "string") {
         continue; // Skip empty text overlays
       }
 
-      if (!overlay.position || typeof overlay.position.x !== 'number' || typeof overlay.position.y !== 'number') {
-        throw new Error('Invalid text overlay position');
+      if (
+        !overlay.position ||
+        typeof overlay.position.x !== "number" ||
+        typeof overlay.position.y !== "number"
+      ) {
+        throw new Error("Invalid text overlay position");
       }
 
       if (!validateOverlayPosition(overlay.position.x, overlay.position.y)) {
-        throw new Error('Text overlay position must be between 0 and 100 percent');
+        throw new Error(
+          "Text overlay position must be between 0 and 100 percent"
+        );
       }
     }
   }
@@ -384,7 +398,7 @@ export class FFmpegProcessor {
   private async loadInputFile(gifUrl: string): Promise<Uint8Array> {
     try {
       const data = await fetchFile(gifUrl);
-      
+
       // Check file size
       if (data.length > FILE_LIMITS.maxInputSize) {
         throw new Error(ERROR_MESSAGES.FILE_TOO_LARGE);
@@ -400,74 +414,73 @@ export class FFmpegProcessor {
     }
   }
 
-  private generateTextFilters(overlays: TextOverlay[], useSystemFonts: boolean = false): string {
-    const activeOverlays = overlays.filter(overlay => overlay.text && overlay.text.trim());
-  
+  private generateSimpleTextFilters(overlays: TextOverlay[], useSystemFonts: boolean = false): string {
+    const activeOverlays = overlays.filter(
+      (overlay) => overlay.text && overlay.text.trim()
+    );
+
     if (activeOverlays.length === 0) {
-      return 'null'; // No text overlays to apply
+      return "null";
     }
-  
-    const cleanHex = (hex?: string) => hex?.replace(/^#/, '') ?? 'ffffff';
-  
+
+    const cleanHex = (hex?: string) => hex?.replace(/^#/, "") ?? "ffffff";
+
     const filters = activeOverlays.map((overlay) => {
-      // Convert from center-based positioning (used in preview) to top-left positioning (used by FFmpeg)
-      // Our preview uses transform: translate(-50%, -50%) to center the text
-      // So we need to adjust the position to account for this
-      const fontSize = overlay.style.fontSize || TEXT_OVERLAY_DEFAULTS.fontSize;
-      const estimatedTextWidth = overlay.text.length * fontSize * 0.6; // Rough estimation
-      const estimatedTextHeight = fontSize;
-      
-      // Calculate position adjustments to match preview positioning
-      const x = `(${overlay.position.x}*w/100)-(${estimatedTextWidth}/2)`;
-      const y = `(${overlay.position.y}*h/100)-(${estimatedTextHeight}/2)`;
-  
+      const fontSize = overlay.style.fontSize || 24;
       const escapedText = escapeTextForFFmpeg(overlay.text);
-  
+
+      // SIMPLE POSITIONING: Use exact percentage coordinates
+      // No complex transforms, just place text where the user positioned it
+      const x = `${overlay.position.x}*w/100`;
+      const y = `${overlay.position.y}*h/100`;
+
+      console.log(`Simple FFmpeg: "${overlay.text}" at ${overlay.position.x}%, ${overlay.position.y}%`);
+
       const drawTextOptions = [
         `text='${escapedText}'`,
         `x=${x}`,
         `y=${y}`,
         `fontsize=${fontSize}`,
-        `fontcolor=${cleanHex(overlay.style.color || TEXT_OVERLAY_DEFAULTS.fontColor)}`,
-        `bordercolor=${cleanHex(overlay.style.strokeColor || TEXT_OVERLAY_DEFAULTS.borderColor)}`,
-        `borderw=${overlay.style.strokeWidth || TEXT_OVERLAY_DEFAULTS.borderWidth}`,
-        `alpha=${overlay.style.opacity ?? TEXT_OVERLAY_DEFAULTS.alpha}`
+        `fontcolor=${cleanHex(overlay.style.color)}`,
+        `bordercolor=${cleanHex(overlay.style.strokeColor)}`,
+        `borderw=${overlay.style.strokeWidth || 0}`,
+        `alpha=${overlay.style.opacity || 1}`
       ];
 
-      // Only add font file if not using system fonts and fonts are loaded
+      // Add font file only if not using system fonts
       if (!useSystemFonts) {
-        const isBold = overlay.style.fontWeight === 'bold';
-        const fontFile = isBold ? 'Arial-Bold.ttf' : 'Arial.ttf';
+        const isBold = overlay.style.fontWeight === "bold";
+        const fontFile = isBold ? "Arial-Bold.ttf" : "Arial.ttf";
         drawTextOptions.push(`fontfile=${fontFile}`);
       }
-  
-      return `drawtext=${drawTextOptions.join(':')}`;
+
+      return `drawtext=${drawTextOptions.join(":")}`;
     });
-  
-    return filters.join(',');
+
+    return filters.join(",");
   }
 
   private async executeFFmpegCommand(textFilters: string): Promise<void> {
     if (!this.ffmpeg) {
-      throw new Error('FFmpeg not initialized');
+      throw new Error("FFmpeg not initialized");
     }
 
-    const qualitySettings = QUALITY_SETTINGS[this.options.quality || 'medium'];
-    
+    const qualitySettings = QUALITY_SETTINGS[this.options.quality || "medium"];
+
     // Build FFmpeg command based on quality settings and text filters
-    const command = [
-      '-i', 'input.gif',
-      '-vf', textFilters,
-      '-y', 'output.gif'
-    ];
+    const command = ["-i", "input.gif", "-vf", textFilters, "-y", "output.gif"];
 
     // Add quality-specific options
     if (qualitySettings.fps) {
-      command.splice(-2, 0, '-r', qualitySettings.fps.toString());
+      command.splice(-2, 0, "-r", qualitySettings.fps.toString());
     }
 
-    console.log('Executing FFmpeg command:', command.join(' '));
-    console.log('Text filters:', textFilters);
+    console.log("Executing FFmpeg command:", command.join(" "));
+    console.log("Text filters:", textFilters);
+    console.log("Individual filter breakdown:");
+    textFilters.split(",").forEach((filter, index) => {
+      console.log(`  Filter ${index + 1}: ${filter}`);
+    });
 
     try {
       // Execute with timeout
@@ -479,21 +492,77 @@ export class FFmpegProcessor {
       });
 
       await Promise.race([execPromise, timeoutPromise]);
-      
+
       // Verify output file was created and has content
       try {
-        const outputData = await this.ffmpeg.readFile('output.gif');
+        const outputData = await this.ffmpeg.readFile("output.gif");
         if (!outputData || (outputData as Uint8Array).length === 0) {
-          throw new Error('FFmpeg produced an empty output file. This may be due to font or filter issues.');
+          throw new Error(
+            "FFmpeg produced an empty output file. This may be due to font or filter issues."
+          );
+        }
+        console.log(
+          `Output file size: ${(outputData as Uint8Array).length} bytes`
+        );
+      } catch (readError) {
+        console.error("Failed to read output file:", readError);
+        throw new Error("FFmpeg processing failed - no output file generated");
+      }
+    } catch (error) {
+      console.error("FFmpeg execution failed:", error);
+      throw error;
+    }
+  }
+
+  private async executeFFmpegOverlayCommand(overlayFilter: string): Promise<void> {
+    if (!this.ffmpeg) {
+      throw new Error("FFmpeg not initialized");
+    }
+
+    const qualitySettings = QUALITY_SETTINGS[this.options.quality || "medium"];
+
+    // Build FFmpeg command for image overlay
+    // -i input.gif -i text_overlay.png -filter_complex "[0:v][1:v]overlay=0:0[v]" -map "[v]" -y output.gif
+    const command = [
+      "-i", "input.gif",           // Input GIF
+      "-i", "text_overlay.png",    // Text overlay image
+      "-filter_complex", overlayFilter, // Overlay filter
+      "-map", "[v]",               // Map the output video
+      "-y", "output.gif"           // Output file
+    ];
+
+    // Add quality-specific options
+    if (qualitySettings.fps) {
+      command.splice(-2, 0, "-r", qualitySettings.fps.toString());
+    }
+
+    console.log("Executing FFmpeg overlay command:", command.join(" "));
+    console.log("Overlay filter:", overlayFilter);
+
+    try {
+      // Execute with timeout
+      const execPromise = this.ffmpeg.exec(command);
+      const timeoutPromise = new Promise<never>((_, reject) => {
+        setTimeout(() => {
+          reject(new Error(ERROR_MESSAGES.PROCESSING_TIMEOUT));
+        }, PROCESSING_TIMEOUTS.processing);
+      });
+
+      await Promise.race([execPromise, timeoutPromise]);
+
+      // Verify output file was created and has content
+      try {
+        const outputData = await this.ffmpeg.readFile("output.gif");
+        if (!outputData || (outputData as Uint8Array).length === 0) {
+          throw new Error("FFmpeg produced an empty output file.");
         }
         console.log(`Output file size: ${(outputData as Uint8Array).length} bytes`);
       } catch (readError) {
-        console.error('Failed to read output file:', readError);
-        throw new Error('FFmpeg processing failed - no output file generated');
+        console.error("Failed to read output file:", readError);
+        throw new Error("FFmpeg processing failed - no output file generated");
       }
-      
     } catch (error) {
-      console.error('FFmpeg execution failed:', error);
+      console.error("FFmpeg overlay execution failed:", error);
       throw error;
     }
   }
@@ -512,12 +581,16 @@ export class FFmpegProcessor {
     });
 
     await Promise.allSettled(cleanupPromises);
-    
+
     // Reset memory usage
     this.memoryUsage = 0;
   }
 
-  private updateProgress(progress: number, stage: ProcessingProgress['stage'], message?: string): void {
+  private updateProgress(
+    progress: number,
+    stage: ProcessingProgress["stage"],
+    message?: string
+  ): void {
     this.currentProgress = {
       progress: Math.max(0, Math.min(1, progress)),
       stage,
@@ -541,7 +614,7 @@ export class FFmpegProcessor {
 
   private handleLog(message: { type: string; message: string }): void {
     // Log FFmpeg messages for debugging
-    if (process.env.NODE_ENV === 'development') {
+    if (process.env.NODE_ENV === "development") {
       console.log(`[FFmpeg ${message.type}]:`, message.message);
     }
   }
@@ -549,13 +622,16 @@ export class FFmpegProcessor {
   private handleProgress(progress: { progress: number; time: number }): void {
     // Update progress based on FFmpeg's internal progress reporting
     if (this.options.enableProgress && progress.progress >= 0) {
-      const normalizedProgress = Math.max(0.4, Math.min(0.8, 0.4 + (progress.progress * 0.4)));
-      this.updateProgress(normalizedProgress, 'processing');
+      const normalizedProgress = Math.max(
+        0.4,
+        Math.min(0.8, 0.4 + progress.progress * 0.4)
+      );
+      this.updateProgress(normalizedProgress, "processing");
     }
   }
 
   private createProcessingError(
-    type: ProcessingError['type'],
+    type: ProcessingError["type"],
     message: string,
     recoverable: boolean,
     retryable: boolean
@@ -577,7 +653,9 @@ let globalFFmpegProcessor: FFmpegProcessor | null = null;
 /**
  * Get or create global FFmpeg processor instance
  */
-export function getFFmpegProcessor(options?: FFmpegProcessorOptions): FFmpegProcessor {
+export function getFFmpegProcessor(
+  options?: FFmpegProcessorOptions
+): FFmpegProcessor {
   if (!globalFFmpegProcessor) {
     globalFFmpegProcessor = new FFmpegProcessor(options);
   }
@@ -607,4 +685,4 @@ export {
   formatFileSize,
   generateProcessingId,
   calculateProgress,
-} from './ffmpegHelpers';
+} from "./ffmpegHelpers";

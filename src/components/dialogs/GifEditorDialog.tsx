@@ -1,12 +1,12 @@
 "use client";
 
 import React, { useState, useCallback, useRef, useEffect } from 'react';
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogHeader, 
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
   DialogTitle,
-  DialogDescription 
+  DialogDescription
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
@@ -14,12 +14,12 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
-import { 
-  Download, 
-  Share2, 
-  RotateCcw, 
-  Play, 
-  Pause, 
+import {
+  Download,
+  Share2,
+  RotateCcw,
+  Play,
+  Pause,
   X,
   Zap,
   CheckCircle,
@@ -44,15 +44,15 @@ interface GifEditorState {
   showSuccessAnimation: boolean;
 }
 
-export function GifEditorDialog({ 
-  gif, 
-  isOpen, 
-  onClose, 
-  onGifGenerated 
+export function GifEditorDialog({
+  gif,
+  isOpen,
+  onClose,
+  onGifGenerated
 }: GifEditorDialogProps) {
   const { toast } = useToast();
   const previewRef = useRef<HTMLDivElement>(null);
-  
+
   // State management
   const [state, setState] = useState<GifEditorState>({
     processedGif: null,
@@ -115,16 +115,16 @@ export function GifEditorDialog({
       return;
     }
 
-    setState(prev => ({ 
-      ...prev, 
-      isProcessing: true, 
+    setState(prev => ({
+      ...prev,
+      isProcessing: true,
       error: null,
       processingProgress: { progress: 0, stage: 'loading' }
     }));
 
     try {
       const processingService = getGifProcessingService();
-      
+
       // Subscribe to progress updates
       const unsubscribe = processingService.onProgressUpdate((progress) => {
         setState(prev => ({ ...prev, processingProgress: progress }));
@@ -132,12 +132,12 @@ export function GifEditorDialog({
 
       // Process the GIF
       const processedGif = await processingService.processGif(gif, validOverlays);
-      
+
       // Cleanup subscription
       unsubscribe();
 
-      setState(prev => ({ 
-        ...prev, 
+      setState(prev => ({
+        ...prev,
         processedGif,
         isProcessing: false,
         showSuccessAnimation: true,
@@ -160,10 +160,10 @@ export function GifEditorDialog({
     } catch (error) {
       console.error('Processing error:', error);
       const errorMessage = error instanceof Error ? error.message : 'An unexpected error occurred';
-      
-      setState(prev => ({ 
-        ...prev, 
-        isProcessing: false, 
+
+      setState(prev => ({
+        ...prev,
+        isProcessing: false,
         error: errorMessage,
         processingProgress: { progress: 0, stage: 'loading' }
       }));
@@ -203,15 +203,15 @@ export function GifEditorDialog({
 
   // Handle reset
   const handleReset = useCallback(() => {
-    setState(prev => ({ 
-      ...prev, 
-      processedGif: null, 
+    setState(prev => ({
+      ...prev,
+      processedGif: null,
       error: null,
       showSuccessAnimation: false,
       processingProgress: { progress: 0, stage: 'loading' }
     }));
     clearAllOverlays();
-    
+
     toast({
       title: "Reset Complete",
       description: "All text overlays have been cleared.",
@@ -233,18 +233,18 @@ export function GifEditorDialog({
     if (!previewRef.current || !gif) {
       return { width: 400, height: 300 };
     }
-    
+
     const rect = previewRef.current.getBoundingClientRect();
     const aspectRatio = gif.width / gif.height;
-    
+
     let width = rect.width;
     let height = width / aspectRatio;
-    
+
     if (height > rect.height) {
       height = rect.height;
       width = height * aspectRatio;
     }
-    
+
     return { width, height };
   }, [gif]);
 
@@ -256,7 +256,7 @@ export function GifEditorDialog({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent 
+      <DialogContent
         className={cn(
           "max-w-7xl w-[95vw] h-[95vh] max-h-[95vh] p-0 gap-0",
           "bg-background border shadow-lg",
@@ -277,7 +277,7 @@ export function GifEditorDialog({
                 Add text overlays to your GIF
               </DialogDescription>
             </div>
-            
+
             <Button
               variant="ghost"
               size="sm"
@@ -322,7 +322,7 @@ export function GifEditorDialog({
                 </div>
 
                 {/* GIF Display with Text Overlays */}
-                <div 
+                <div
                   ref={previewRef}
                   className="relative aspect-video bg-muted rounded-lg overflow-hidden group"
                   onClick={() => setActiveOverlay(null)}
@@ -334,7 +334,9 @@ export function GifEditorDialog({
                     className="w-full h-full object-contain"
                   />
 
-                  {/* Text Overlays */}
+                  {/* Simple text preview - matches FFmpeg positioning */}
+
+                  {/* Interactive Text Overlays for dragging */}
                   {overlays.map((overlay) => (
                     <DraggableText
                       key={overlay.id}
@@ -363,8 +365,8 @@ export function GifEditorDialog({
                           {state.processingProgress.stage === 'encoding' && 'Encoding final GIF...'}
                           {state.processingProgress.stage === 'complete' && 'Complete!'}
                         </p>
-                        <Progress 
-                          value={state.processingProgress.progress * 100} 
+                        <Progress
+                          value={state.processingProgress.progress * 100}
                           className="w-48 mx-auto"
                         />
                       </div>

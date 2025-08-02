@@ -71,218 +71,218 @@ export function TextControls({ style, onStyleChange, className }: TextControlsPr
 
   return (
     <div className={cn('w-full space-y-6', className)}>
-        {/* Font Family */}
+      {/* Font Family */}
+      <div className="space-y-2">
+        <Label className="text-sm font-medium">Font Family</Label>
+        <Select value={style.fontFamily} onValueChange={(value) => onStyleChange({ fontFamily: value })}>
+          <SelectTrigger className="w-full">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {FONT_FAMILIES.map((font) => (
+              <SelectItem key={font} value={font} style={{ fontFamily: font }}>
+                {font}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      {/* Font Size */}
+      <div className="space-y-3">
+        <div className="flex items-center justify-between">
+          <Label className="text-sm font-medium">Font Size</Label>
+          <Badge variant="secondary" className="text-xs">
+            {style.fontSize}px
+          </Badge>
+        </div>
+        <div className="flex items-center gap-3">
+          <Button
+            variant="outline"
+            size="icon"
+            className="h-8 w-8 shrink-0"
+            onClick={() => onStyleChange({ fontSize: Math.max(8, style.fontSize - 2) })}
+          >
+            <Minus className="w-3 h-3" />
+          </Button>
+          <Slider
+            value={[style.fontSize]}
+            onValueChange={handleFontSizeChange}
+            min={8}
+            max={72}
+            step={1}
+            className="flex-1"
+          />
+          <Button
+            variant="outline"
+            size="icon"
+            className="h-8 w-8 shrink-0"
+            onClick={() => onStyleChange({ fontSize: Math.min(72, style.fontSize + 2) })}
+          >
+            <Plus className="w-3 h-3" />
+          </Button>
+        </div>
+      </div>
+
+      {/* Font Weight & Alignment */}
+      <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
-          <Label className="text-sm font-medium">Font Family</Label>
-          <Select value={style.fontFamily} onValueChange={(value) => onStyleChange({ fontFamily: value })}>
-            <SelectTrigger className="w-full">
+          <Label className="text-sm font-medium">Weight</Label>
+          <Select value={style.fontWeight} onValueChange={(value: 'normal' | 'bold') => onStyleChange({ fontWeight: value })}>
+            <SelectTrigger>
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              {FONT_FAMILIES.map((font) => (
-                <SelectItem key={font} value={font} style={{ fontFamily: font }}>
-                  {font}
-                </SelectItem>
-              ))}
+              <SelectItem value="normal">Normal</SelectItem>
+              <SelectItem value="bold">Bold</SelectItem>
             </SelectContent>
           </Select>
         </div>
-
-        {/* Font Size */}
-        <div className="space-y-3">
-          <div className="flex items-center justify-between">
-            <Label className="text-sm font-medium">Font Size</Label>
-            <Badge variant="secondary" className="text-xs">
-              {style.fontSize}px
-            </Badge>
+        <div className="space-y-2">
+          <Label className="text-sm font-medium">Alignment</Label>
+          <div className="flex rounded-md border">
+            {[
+              { value: 'left', icon: AlignLeft },
+              { value: 'center', icon: AlignCenter },
+              { value: 'right', icon: AlignRight },
+            ].map(({ value, icon: Icon }) => (
+              <Button
+                key={value}
+                variant={style.textAlign === value ? 'default' : 'ghost'}
+                size="sm"
+                className="flex-1 rounded-none first:rounded-l-md last:rounded-r-md"
+                onClick={() => onStyleChange({ textAlign: value as 'left' | 'center' | 'right' })}
+              >
+                <Icon className="w-4 h-4" />
+              </Button>
+            ))}
           </div>
+        </div>
+      </div>
+
+      <Separator />
+
+      {/* Text Color */}
+      <div className="space-y-3">
+        <div className="flex items-center gap-2">
+          <Palette className="w-4 h-4" />
+          <Label className="text-sm font-medium">Text Color</Label>
+        </div>
+        <div className="space-y-3">
           <div className="flex items-center gap-3">
-            <Button
-              variant="outline"
-              size="icon"
-              className="h-8 w-8 shrink-0"
-              onClick={() => onStyleChange({ fontSize: Math.max(8, style.fontSize - 2) })}
-            >
-              <Minus className="w-3 h-3" />
-            </Button>
-            <Slider
-              value={[style.fontSize]}
-              onValueChange={handleFontSizeChange}
-              min={8}
-              max={72}
-              step={1}
-              className="flex-1"
+            <div
+              className="w-10 h-10 rounded-md border-2 border-border cursor-pointer shadow-sm"
+              style={{ backgroundColor: style.color }}
+              onClick={() => {
+                const input = document.createElement('input');
+                input.type = 'color';
+                input.value = style.color;
+                input.onchange = (e) => handleColorChange((e.target as HTMLInputElement).value, 'color');
+                input.click();
+              }}
             />
-            <Button
-              variant="outline"
-              size="icon"
-              className="h-8 w-8 shrink-0"
-              onClick={() => onStyleChange({ fontSize: Math.min(72, style.fontSize + 2) })}
-            >
-              <Plus className="w-3 h-3" />
-            </Button>
+            <Input
+              type="text"
+              value={style.color}
+              onChange={(e) => handleColorChange(e.target.value, 'color')}
+              className="flex-1 font-mono text-sm"
+              placeholder="#ffffff"
+            />
           </div>
-        </div>
-
-        {/* Font Weight & Alignment */}
-        <div className="grid grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label className="text-sm font-medium">Weight</Label>
-            <Select value={style.fontWeight} onValueChange={(value: 'normal' | 'bold') => onStyleChange({ fontWeight: value })}>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="normal">Normal</SelectItem>
-                <SelectItem value="bold">Bold</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="space-y-2">
-            <Label className="text-sm font-medium">Alignment</Label>
-            <div className="flex rounded-md border">
-              {[
-                { value: 'left', icon: AlignLeft },
-                { value: 'center', icon: AlignCenter },
-                { value: 'right', icon: AlignRight },
-              ].map(({ value, icon: Icon }) => (
-                <Button
-                  key={value}
-                  variant={style.textAlign === value ? 'default' : 'ghost'}
-                  size="sm"
-                  className="flex-1 rounded-none first:rounded-l-md last:rounded-r-md"
-                  onClick={() => onStyleChange({ textAlign: value as 'left' | 'center' | 'right' })}
-                >
-                  <Icon className="w-4 h-4" />
-                </Button>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        <Separator />
-
-        {/* Text Color */}
-        <div className="space-y-3">
-          <div className="flex items-center gap-2">
-            <Palette className="w-4 h-4" />
-            <Label className="text-sm font-medium">Text Color</Label>
-          </div>
-          <div className="space-y-3">
-            <div className="flex items-center gap-3">
-              <div
-                className="w-10 h-10 rounded-md border-2 border-border cursor-pointer shadow-sm"
-                style={{ backgroundColor: style.color }}
-                onClick={() => {
-                  const input = document.createElement('input');
-                  input.type = 'color';
-                  input.value = style.color;
-                  input.onchange = (e) => handleColorChange((e.target as HTMLInputElement).value, 'color');
-                  input.click();
-                }}
+          <div className="grid grid-cols-5 gap-2">
+            {PRESET_COLORS.map((color) => (
+              <button
+                key={color}
+                className={cn(
+                  'w-8 h-8 rounded-md border-2 cursor-pointer transition-all hover:scale-110',
+                  style.color === color ? 'border-primary ring-2 ring-primary/20' : 'border-border'
+                )}
+                style={{ backgroundColor: color }}
+                onClick={() => handleColorChange(color, 'color')}
               />
-              <Input
-                type="text"
-                value={style.color}
-                onChange={(e) => handleColorChange(e.target.value, 'color')}
-                className="flex-1 font-mono text-sm"
-                placeholder="#ffffff"
-              />
-            </div>
-            <div className="grid grid-cols-5 gap-2">
-              {PRESET_COLORS.map((color) => (
-                <button
-                  key={color}
-                  className={cn(
-                    'w-8 h-8 rounded-md border-2 cursor-pointer transition-all hover:scale-110',
-                    style.color === color ? 'border-primary ring-2 ring-primary/20' : 'border-border'
-                  )}
-                  style={{ backgroundColor: color }}
-                  onClick={() => handleColorChange(color, 'color')}
-                />
-              ))}
-            </div>
+            ))}
           </div>
         </div>
+      </div>
 
-        {/* Stroke Color */}
+      {/* Stroke Color */}
+      <div className="space-y-3">
+        <Label className="text-sm font-medium">Stroke Color</Label>
         <div className="space-y-3">
-          <Label className="text-sm font-medium">Stroke Color</Label>
-          <div className="space-y-3">
-            <div className="flex items-center gap-3">
-              <div
-                className="w-10 h-10 rounded-md border-2 border-border cursor-pointer shadow-sm"
-                style={{ backgroundColor: style.strokeColor }}
-                onClick={() => {
-                  const input = document.createElement('input');
-                  input.type = 'color';
-                  input.value = style.strokeColor;
-                  input.onchange = (e) => handleColorChange((e.target as HTMLInputElement).value, 'strokeColor');
-                  input.click();
-                }}
+          <div className="flex items-center gap-3">
+            <div
+              className="w-10 h-10 rounded-md border-2 border-border cursor-pointer shadow-sm"
+              style={{ backgroundColor: style.strokeColor }}
+              onClick={() => {
+                const input = document.createElement('input');
+                input.type = 'color';
+                input.value = style.strokeColor;
+                input.onchange = (e) => handleColorChange((e.target as HTMLInputElement).value, 'strokeColor');
+                input.click();
+              }}
+            />
+            <Input
+              type="text"
+              value={style.strokeColor}
+              onChange={(e) => handleColorChange(e.target.value, 'strokeColor')}
+              className="flex-1 font-mono text-sm"
+              placeholder="#000000"
+            />
+          </div>
+          <div className="grid grid-cols-5 gap-2">
+            {PRESET_COLORS.map((color) => (
+              <button
+                key={color}
+                className={cn(
+                  'w-8 h-8 rounded-md border-2 cursor-pointer transition-all hover:scale-110',
+                  style.strokeColor === color ? 'border-primary ring-2 ring-primary/20' : 'border-border'
+                )}
+                style={{ backgroundColor: color }}
+                onClick={() => handleColorChange(color, 'strokeColor')}
               />
-              <Input
-                type="text"
-                value={style.strokeColor}
-                onChange={(e) => handleColorChange(e.target.value, 'strokeColor')}
-                className="flex-1 font-mono text-sm"
-                placeholder="#000000"
-              />
-            </div>
-            <div className="grid grid-cols-5 gap-2">
-              {PRESET_COLORS.map((color) => (
-                <button
-                  key={color}
-                  className={cn(
-                    'w-8 h-8 rounded-md border-2 cursor-pointer transition-all hover:scale-110',
-                    style.strokeColor === color ? 'border-primary ring-2 ring-primary/20' : 'border-border'
-                  )}
-                  style={{ backgroundColor: color }}
-                  onClick={() => handleColorChange(color, 'strokeColor')}
-                />
-              ))}
-            </div>
+            ))}
           </div>
         </div>
+      </div>
 
-        {/* Stroke Width */}
-        <div className="space-y-3">
-          <div className="flex items-center justify-between">
-            <Label className="text-sm font-medium">Stroke Width</Label>
-            <Badge variant="secondary" className="text-xs">
-              {style.strokeWidth}px
-            </Badge>
-          </div>
-          <Slider
-            value={[style.strokeWidth]}
-            onValueChange={handleStrokeWidthChange}
-            min={0}
-            max={10}
-            step={0.5}
-            className="w-full"
-          />
+      {/* Stroke Width */}
+      <div className="space-y-3">
+        <div className="flex items-center justify-between">
+          <Label className="text-sm font-medium">Stroke Width</Label>
+          <Badge variant="secondary" className="text-xs">
+            {style.strokeWidth}px
+          </Badge>
         </div>
+        <Slider
+          value={[style.strokeWidth]}
+          onValueChange={handleStrokeWidthChange}
+          min={0}
+          max={10}
+          step={0.5}
+          className="w-full"
+        />
+      </div>
 
-        {/* Opacity */}
-        <div className="space-y-3">
-          <div className="flex items-center justify-between">
-            <Label className="text-sm font-medium flex items-center gap-2">
-              {style.opacity < 1 ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-              Opacity
-            </Label>
-            <Badge variant="secondary" className="text-xs">
-              {Math.round(style.opacity * 100)}%
-            </Badge>
-          </div>
-          <Slider
-            value={[style.opacity * 100]}
-            onValueChange={handleOpacityChange}
-            min={0}
-            max={100}
-            step={5}
-            className="w-full"
-          />
+      {/* Opacity */}
+      <div className="space-y-3">
+        <div className="flex items-center justify-between">
+          <Label className="text-sm font-medium flex items-center gap-2">
+            {style.opacity < 1 ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+            Opacity
+          </Label>
+          <Badge variant="secondary" className="text-xs">
+            {Math.round(style.opacity * 100)}%
+          </Badge>
         </div>
+        <Slider
+          value={[style.opacity * 100]}
+          onValueChange={handleOpacityChange}
+          min={0}
+          max={100}
+          step={5}
+          className="w-full"
+        />
+      </div>
 
     </div>
   );

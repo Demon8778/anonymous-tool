@@ -42,11 +42,13 @@ export function DraggableText({
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const dragStartRef = useRef({ x: 0, y: 0 });
 
-  // Convert percentage position to pixels
+  // SIMPLE POSITIONING: Convert percentage to pixels
   const pixelPosition = {
     x: (overlay.position.x / 100) * containerWidth,
     y: (overlay.position.y / 100) * containerHeight,
   };
+  
+  console.log(`Preview: "${overlay.text}" at ${overlay.position.x}%, ${overlay.position.y}% -> ${pixelPosition.x}px, ${pixelPosition.y}px`);
 
   // Handle drag start (mouse and touch)
   const handleDragStart = useCallback((clientX: number, clientY: number) => {
@@ -179,7 +181,7 @@ export function DraggableText({
       style={{
         left: `${pixelPosition.x}px`,
         top: `${pixelPosition.y}px`,
-        transform: 'translate(-50%, -50%)',
+        transform: 'translate(0, 0)', // No transform - match FFmpeg's top-left positioning
         ...textStyles,
         pointerEvents: 'auto', // Ensure text overlay captures pointer events
       }}

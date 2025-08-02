@@ -141,3 +141,32 @@ export function calculateProgress(current: number, total: number): number {
   if (total <= 0) return 0;
   return Math.max(0, Math.min(100, (current / total) * 100));
 }
+
+/**
+ * Utility function to generate FFmpeg position expression for text alignment
+ */
+export function generateTextPositionExpression(
+  positionPercent: number,
+  alignment: 'left' | 'center' | 'right',
+  axis: 'x' | 'y'
+): string {
+  const dimension = axis === 'x' ? 'w' : 'h';
+  const textDimension = axis === 'x' ? 'text_w' : 'text_h';
+  const basePosition = `(${positionPercent}*${dimension}/100)`;
+  
+  if (axis === 'y') {
+    // Vertical positioning is always center-based
+    return `max(0, min(${dimension}-${textDimension}, ${basePosition}-(${textDimension}/2)))`;
+  }
+  
+  // Horizontal positioning depends on alignment
+  switch (alignment) {
+    case 'left':
+      return `max(0, min(${dimension}-${textDimension}, ${basePosition}))`;
+    case 'right':
+      return `max(0, min(${dimension}-${textDimension}, ${basePosition}-${textDimension}))`;
+    case 'center':
+    default:
+      return `max(0, min(${dimension}-${textDimension}, ${basePosition}-(${textDimension}/2)))`;
+  }
+}

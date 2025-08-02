@@ -63,7 +63,7 @@ export function PageHeader({
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-96 w-96 rounded-full bg-gradient-to-r from-primary/5 to-transparent blur-3xl animate-pulse-gentle" />
         </>
       )}
-      
+
       {/* Bottom gradient fade */}
       <div className="absolute bottom-0 left-0 right-0 h-4 bg-gradient-to-t from-background/50 to-transparent" />
     </div>
