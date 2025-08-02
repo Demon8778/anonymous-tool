@@ -17,17 +17,9 @@ export interface DialogTransition {
 
 // Dialog manager interface
 export interface DialogManager {
-  gifEditor: DialogState;
+  gifEditor: DialogState; // Keep for compatibility but unused
   sharing: DialogState;
   sharedViewer: DialogState;
-}
-
-// GIF Editor Dialog specific interfaces
-export interface GifEditorDialogProps {
-  gif: Gif | null;
-  isOpen: boolean;
-  onClose: () => void;
-  onGifGenerated: (processedGif: ProcessedGif) => void;
 }
 
 export interface GifEditorState {

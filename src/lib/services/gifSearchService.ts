@@ -36,7 +36,7 @@ export interface KlipyGifResponse {
   id: string;
   title: string;
   file: {
-    hd: {
+    md: {
       gif: {
         height: number,
         size: number,
@@ -417,10 +417,10 @@ export class GifSearchServiceImpl implements GifSearchService {
   private transformKlipyGif = (gif: KlipyGifResponse): Gif => ({
     id: gif.id,
     title: gif.title || 'Untitled GIF',
-    url: gif.file.hd.gif.url,
-    preview: gif.file.hd.gif.url,
-    width: gif.file.hd.gif.width,
-    height: gif.file.hd.gif.height,
+    url: gif.file.md.gif.url,
+    preview: gif.file.md.gif.url,
+    width: gif.file.md.gif.width,
+    height: gif.file.md.gif.height,
     source: 'klipy',
   });
 

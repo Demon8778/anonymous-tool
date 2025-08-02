@@ -4,7 +4,7 @@ import React, { useState, useCallback } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { AlertCircle, Play, Pause } from 'lucide-react';
+import { AlertCircle, Play, Pause, Edit } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { GifErrorBoundary } from '@/components/error/GifErrorBoundary';
 import { validateGif } from '@/lib/utils/validation';
@@ -145,15 +145,16 @@ export function MasonryGifCard({
                 )}>
                   <Button
                     variant="secondary"
-                    size="sm"
-                    className="glass hover:bg-background/90 text-foreground shadow-lg hover-lift touch-target"
+                    size="icon"
+                    className="glass hover:bg-background/90 text-foreground shadow-lg hover-lift touch-target h-10 w-10"
                     onClick={(e) => {
                       e.stopPropagation();
                       // Navigate to gif-editor with the GIF URL
                       router.push(`/gif-editor?gif=${encodeURIComponent(item.url)}`);
                     }}
+                    title="Edit GIF"
                   >
-                    Edit GIF
+                    <Edit className="h-4 w-4" />
                   </Button>
                 </div>
 
@@ -175,7 +176,7 @@ export function MasonryGifCard({
                 
                 {/* Hover gradient overlay */}
                 <div className={cn(
-                  "absolute inset-0 bg-gradient-to-t from-primary/10 via-transparent to-transparent transition-opacity duration-300",
+                  "absolute inset-0 bg-gradient-to-t from-primary/10 via-transparent to-transparent transition-opacity duration-300 pointer-events-none",
                   isHovered ? 'opacity-100' : 'opacity-0'
                 )} />
               </div>

@@ -6,7 +6,6 @@ import { DialogUrlManager, createDialogTransition, DIALOG_TRANSITIONS } from '@/
 
 interface DialogStateHook {
   dialogs: DialogManager;
-  openGifEditor: (gif: GifWithContext) => void;
   openSharing: (processedGif: ProcessedGif) => void;
   openSharedViewer: (shareId: string) => void;
   closeDialog: (dialogType: keyof DialogManager) => void;
@@ -45,7 +44,6 @@ export const useDialogState = (): DialogStateHook => {
     urlManager.current.updateUrl({
       query: currentParams.query || undefined,
       page: currentParams.page > 1 ? currentParams.page : undefined,
-      gifId: dialogs.gifEditor.isOpen && dialogs.gifEditor.data?.id ? dialogs.gifEditor.data.id : undefined,
       shareId: dialogs.sharedViewer.isOpen && dialogs.sharedViewer.data?.shareId ? dialogs.sharedViewer.data.shareId : undefined,
     });
   }, [dialogs]);
@@ -77,24 +75,7 @@ export const useDialogState = (): DialogStateHook => {
     setTimeout(() => updateUrlForCurrentState(), 0);
   }, [updateUrlForCurrentState]);
 
-  // Open GIF editor dialog
-  const openGifEditor = useCallback((gif: GifWithContext) => {
-    setDialogs(prev => ({
-      ...prev,
-      // Close other dialogs
-      sharing: { ...prev.sharing, isOpen: false, data: null },
-      sharedViewer: { ...prev.sharedViewer, isOpen: false, data: null },
-      // Open GIF editor
-      gifEditor: {
-        isOpen: true,
-        data: gif,
-        onClose: () => closeDialog('gifEditor'),
-      },
-    }));
 
-    // Update URL with gif parameter
-    setTimeout(() => updateUrlForCurrentState(), 0);
-  }, [closeDialog, updateUrlForCurrentState]);
 
   // Open sharing dialog
   const openSharing = useCallback((processedGif: ProcessedGif) => {
@@ -146,7 +127,7 @@ export const useDialogState = (): DialogStateHook => {
       const params = urlManager.current.getCurrentParams();
 
       // Close all dialogs if no relevant parameters
-      if (!params.gifId && !params.shareId) {
+      if (!params.shareId) {
         setDialogs(prev => ({
           gifEditor: { ...prev.gifEditor, isOpen: false, data: null },
           sharing: { ...prev.sharing, isOpen: false, data: null },
@@ -169,34 +150,7 @@ export const useDialogState = (): DialogStateHook => {
         return;
       }
 
-      // Handle GIF editor parameter
-      if (params.gifId && (!dialogs.gifEditor.isOpen || dialogs.gifEditor.data?.id !== params.gifId)) {
-        // Create a mock GIF for the editor (in real app, fetch by ID)
-        const mockGif: GifWithContext = {
-          id: params.gifId,
-          title: 'Selected GIF',
-          url: `https://media.giphy.com/media/${params.gifId}/giphy.gif`,
-          preview: `https://media.giphy.com/media/${params.gifId}/200.gif`,
-          width: 480,
-          height: 270,
-          duration: 2000,
-          frameCount: 20,
-          source: 'giphy',
-          selectedAt: new Date(),
-          searchQuery: params.query || undefined,
-        };
 
-        setDialogs(prev => ({
-          sharing: { ...prev.sharing, isOpen: false, data: null },
-          sharedViewer: { ...prev.sharedViewer, isOpen: false, data: null },
-          gifEditor: {
-            isOpen: true,
-            data: mockGif,
-            onClose: () => closeDialog('gifEditor'),
-          },
-        }));
-        return;
-      }
     };
 
     // Only add listener after initial mount to avoid conflicts
@@ -217,7 +171,6 @@ export const useDialogState = (): DialogStateHook => {
 
   return {
     dialogs,
-    openGifEditor,
     openSharing,
     openSharedViewer,
     closeDialog,
