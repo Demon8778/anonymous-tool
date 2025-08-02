@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { Upload, Plus, Trash2, Download, Zap, Loader2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -25,13 +26,30 @@ interface TextOverlay {
   };
 }
 
-export default function GifEditorPage() {
+function GifEditorContent() {
+  const searchParams = useSearchParams();
   const [gifSrc, setGifSrc] = useState('/your.gif'); // Default placeholder
   const [isProcessing, setIsProcessing] = useState(false);
   const [processedGifUrl, setProcessedGifUrl] = useState<string | null>(null);
   const [overlays, setOverlays] = useState<TextOverlay[]>([]);
   const [activeOverlayId, setActiveOverlayId] = useState<string | null>(null);
   const [scaleFactor, setScaleFactor] = useState(1);
+
+  // Handle GIF URL from query parameter
+  useEffect(() => {
+    const gifUrl = searchParams.get('gif');
+    if (gifUrl) {
+      setGifSrc(decodeURIComponent(gifUrl));
+      setProcessedGifUrl(null);
+      setOverlays([]);
+      setActiveOverlayId(null);
+      
+      // Add initial text overlay when GIF is loaded from URL
+      setTimeout(() => {
+        addTextOverlay();
+      }, 100);
+    }
+  }, [searchParams]);
 
   const addTextOverlay = () => {
     // Limit to maximum 2 text overlays
@@ -421,15 +439,36 @@ export default function GifEditorPage() {
         {/* Empty State - Show when no GIF is uploaded */}
         {gifSrc === '/your.gif' && (
           <div className="text-center py-16">
+            <div className="w-24 h-24 mx-auto mb-6 rounded-full bg-muted flex items-center justify-center">
+              <Upload className="h-12 w-12 text-muted-foreground" />
+            </div>
             <h3 className="text-xl font-semibold text-foreground mb-2">
               Upload a GIF to get started
             </h3>
             <p className="text-muted-foreground mb-6 max-w-md mx-auto">
-              Choose a GIF file from your device and start adding text overlays to create your custom GIF.
+              Use the upload area above to choose a GIF file and start adding text overlays.
             </p>
           </div>
         )}
       </div>
     </div>
+  );
+}
+
+export default function GifEditorPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 mx-auto mb-4 relative">
+            <div className="absolute inset-0 rounded-full border-4 border-muted"></div>
+            <div className="absolute inset-0 rounded-full border-4 border-primary border-t-transparent animate-spin"></div>
+          </div>
+          <p className="text-lg font-medium text-foreground">Loading GIF Editor...</p>
+        </div>
+      </div>
+    }>
+      <GifEditorContent />
+    </Suspense>
   );
 }

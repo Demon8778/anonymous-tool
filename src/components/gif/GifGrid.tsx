@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { AlertCircle, Play, Pause, Search, RefreshCw, Loader2, Grid, LayoutGrid } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import { GifErrorBoundary } from '@/components/error/GifErrorBoundary';
 import { GifSkeleton, GifLoadMoreSkeleton } from '@/components/ui/gif-skeleton';
 import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
@@ -39,6 +40,7 @@ interface GifCardProps {
 }
 
 function GifCard({ gif, isSelected, onSelect, onError }: GifCardProps) {
+  const router = useRouter();
   const [isHovered, setIsHovered] = useState(false);
   const [imageError, setImageError] = useState(false);
   const [isPlaying, setIsPlaying] = useState(true);
@@ -53,7 +55,7 @@ function GifCard({ gif, isSelected, onSelect, onError }: GifCardProps) {
       onError?.(gif, error);
       return;
     }
-    
+
     onSelect(gif);
   }, [gif, onSelect, onError]);
 
@@ -76,7 +78,7 @@ function GifCard({ gif, isSelected, onSelect, onError }: GifCardProps) {
   // Intersection observer for lazy loading
   const observerRef = useCallback((node: HTMLDivElement | null) => {
     if (!node) return;
-    
+
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting && !hasIntersected) {
@@ -86,118 +88,118 @@ function GifCard({ gif, isSelected, onSelect, onError }: GifCardProps) {
       },
       { threshold: 0.1, rootMargin: '50px' }
     );
-    
+
     observer.observe(node);
     return () => observer.disconnect();
   }, [hasIntersected]);
 
   return (
     <GifErrorBoundary type="display" onError={(error) => onError?.(gif, error)}>
-      <Card 
+      <Card
         ref={observerRef}
         data-gif-id={gif.id}
         className={cn(
           "group cursor-pointer transition-all duration-300 hover-lift focus-ring touch-manipulation",
-          isSelected 
-            ? 'ring-2 ring-blue-500 shadow-lg bg-gradient-to-br from-blue-50 to-purple-50 dark:from-blue-950/20 dark:to-purple-950/20 scale-105' 
+          isSelected
+            ? 'ring-2 ring-blue-500 shadow-lg bg-gradient-to-br from-blue-50 to-purple-50 dark:from-blue-950/20 dark:to-purple-950/20 scale-105'
             : 'hover:shadow-xl glass hover-glow'
         )}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
         onClick={handleSelect}
       >
-      <CardContent className="p-0 h-full relative overflow-hidden rounded-lg">
-        {imageError ? (
-          <div className="aspect-square bg-gradient-to-br from-muted/50 to-muted/30 flex items-center justify-center animate-fade-in">
-            <div className="text-center text-muted-foreground">
-              <AlertCircle className="h-8 w-8 mx-auto mb-2 animate-pulse" />
-              <p className="text-sm font-medium">Failed to load</p>
-              <p className="text-xs text-muted-foreground">Try again later</p>
+        <CardContent className="p-0 h-full relative overflow-hidden rounded-lg">
+          {imageError ? (
+            <div className="aspect-square bg-gradient-to-br from-muted/50 to-muted/30 flex items-center justify-center animate-fade-in">
+              <div className="text-center text-muted-foreground">
+                <AlertCircle className="h-8 w-8 mx-auto mb-2 animate-pulse" />
+                <p className="text-sm font-medium">Failed to load</p>
+                <p className="text-xs text-muted-foreground">Try again later</p>
+              </div>
             </div>
-          </div>
-        ) : (
-          <>
-            <div className="relative aspect-square overflow-hidden bg-gradient-to-br from-muted/50 to-muted/30">
-              {/* Loading skeleton */}
-              {(isLoading || !hasIntersected) && (
-                <div className="absolute inset-0 loading-skeleton">
-                  <div className="absolute inset-0 loading-shimmer" />
-                </div>
-              )}
-              
-              {hasIntersected && (
-                <img
-                  src={isPlaying ? gif.url : gif.preview}
-                  alt={gif.title}
-                  className={cn(
-                    "w-full h-full object-cover transition-all duration-500 group-hover:scale-110",
-                    isLoading && "opacity-0",
-                    !isLoading && "opacity-100"
-                  )}
-                  onError={handleImageError}
-                  onLoad={handleImageLoad}
-                  loading="lazy"
-                />
-              )}
-              
-              {/* Enhanced overlay controls */}
-              {/* <div className={cn(
-                "absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent flex items-center justify-center transition-all duration-300",
-                isHovered ? 'opacity-100' : 'opacity-0'
-              )}>
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  className="glass hover:bg-background/90 text-foreground shadow-lg hover-lift touch-target"
-                  onClick={togglePlayback}
-                >
-                  {isPlaying ? (
-                    <Pause className="h-4 w-4" />
-                  ) : (
-                    <Play className="h-4 w-4" />
-                  )}
-                </Button>
-              </div> */}
+          ) : (
+            <>
+              <div className="relative aspect-square overflow-hidden bg-gradient-to-br from-muted/50 to-muted/30">
+                {/* Loading skeleton */}
+                {(isLoading || !hasIntersected) && (
+                  <div className="absolute inset-0 loading-skeleton">
+                    <div className="absolute inset-0 loading-shimmer" />
+                  </div>
+                )}
 
-              {/* Enhanced selection indicator */}
-              {isSelected && (
-                <div className="absolute top-2 right-2 animate-scale-in">
-                  <Badge className="bg-gradient-to-r from-primary to-primary/80 text-primary-foreground shadow-lg animate-pulse-gentle">
-                    Selected
+                {hasIntersected && (
+                  <img
+                    src={isPlaying ? gif.url : gif.preview}
+                    alt={gif.title}
+                    className={cn(
+                      "w-full h-full object-cover transition-all duration-500 group-hover:scale-110",
+                      isLoading && "opacity-0",
+                      !isLoading && "opacity-100"
+                    )}
+                    onError={handleImageError}
+                    onLoad={handleImageLoad}
+                    loading="lazy"
+                  />
+                )}
+
+                {/* Enhanced overlay controls */}
+                <div className={cn(
+                  "absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent flex items-center justify-center transition-all duration-300",
+                  isHovered ? 'opacity-100' : 'opacity-0'
+                )}>
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    className="glass hover:bg-background/90 text-foreground shadow-lg hover-lift touch-target"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      // Navigate to gif-editor with the GIF URL
+                      router.push(`/gif-editor?gif=${encodeURIComponent(gif.url)}`);
+                    }}
+                  >
+                    Edit GIF
+                  </Button>
+                </div>
+
+                {/* Enhanced selection indicator */}
+                {isSelected && (
+                  <div className="absolute top-2 right-2 animate-scale-in">
+                    <Badge className="bg-gradient-to-r from-primary to-primary/80 text-primary-foreground shadow-lg animate-pulse-gentle">
+                      Selected
+                    </Badge>
+                  </div>
+                )}
+
+                {/* Enhanced source badge */}
+                <div className="absolute bottom-2 left-2">
+                  <Badge variant="secondary" className="text-xs glass text-muted-foreground shadow-sm">
+                    {gif.source.toUpperCase()}
                   </Badge>
                 </div>
-              )}
 
-              {/* Enhanced source badge */}
-              <div className="absolute bottom-2 left-2">
-                <Badge variant="secondary" className="text-xs glass text-muted-foreground shadow-sm">
-                  {gif.source.toUpperCase()}
-                </Badge>
+                {/* Hover gradient overlay */}
+                <div className={cn(
+                  "absolute inset-0 bg-gradient-to-t from-primary/10 via-transparent to-transparent transition-opacity duration-300",
+                  isHovered ? 'opacity-100' : 'opacity-0'
+                )} />
               </div>
-              
-              {/* Hover gradient overlay */}
-              <div className={cn(
-                "absolute inset-0 bg-gradient-to-t from-primary/10 via-transparent to-transparent transition-opacity duration-300",
-                isHovered ? 'opacity-100' : 'opacity-0'
-              )} />
-            </div>
 
-            {/* Enhanced GIF info */}
-            <div className="p-2 sm:p-3 space-y-1 sm:space-y-2">
-              <h3 className="text-sm font-medium text-foreground truncate group-hover:text-primary transition-colors duration-200" title={gif.title}>
-                {gif.title}
-              </h3>
-              <div className="flex items-center justify-between text-xs text-muted-foreground">
-                <span className="font-mono">{gif.width} × {gif.height}</span>
-                {gif.duration && (
-                  <span className="font-mono">{(gif.duration / 1000).toFixed(1)}s</span>
-                )}
+              {/* Enhanced GIF info */}
+              <div className="p-2 sm:p-3 space-y-1 sm:space-y-2">
+                <h3 className="text-sm font-medium text-foreground truncate group-hover:text-primary transition-colors duration-200" title={gif.title}>
+                  {gif.title}
+                </h3>
+                <div className="flex items-center justify-between text-xs text-muted-foreground">
+                  <span className="font-mono">{gif.width} × {gif.height}</span>
+                  {gif.duration && (
+                    <span className="font-mono">{(gif.duration / 1000).toFixed(1)}s</span>
+                  )}
+                </div>
               </div>
-            </div>
-          </>
-        )}
-      </CardContent>
-    </Card>
+            </>
+          )}
+        </CardContent>
+      </Card>
     </GifErrorBoundary>
   );
 }
@@ -206,7 +208,7 @@ function GifCard({ gif, isSelected, onSelect, onError }: GifCardProps) {
 function InfiniteScrollTrigger({ onIntersect }: { onIntersect: () => void }) {
   const observerRef = useCallback((node: HTMLDivElement | null) => {
     if (!node) return;
-    
+
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
@@ -215,7 +217,7 @@ function InfiniteScrollTrigger({ onIntersect }: { onIntersect: () => void }) {
       },
       { threshold: 0.1, rootMargin: '100px' }
     );
-    
+
     observer.observe(node);
     return () => observer.disconnect();
   }, [onIntersect]);
@@ -333,7 +335,7 @@ export function GifGrid({
           {/* GIF cards with staggered animation */}
           {gifs.map((gif, index) => {
             const isLastItem = index === gifs.length - 1;
-            
+
             return (
               <div
                 key={gif.id}
@@ -390,7 +392,7 @@ export function GifGrid({
               Try searching with different keywords or check your spelling
             </p>
           </div>
-          
+
           {/* Suggested search terms */}
           <div className="space-y-3">
             <p className="text-sm font-medium text-muted-foreground">Popular searches:</p>

@@ -5,6 +5,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { AlertCircle, Play, Pause } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import { GifErrorBoundary } from '@/components/error/GifErrorBoundary';
 import { validateGif } from '@/lib/utils/validation';
 import { cn } from '@/lib/utils';
@@ -25,6 +26,7 @@ export function MasonryGifCard({
   onError,
   columnWidth 
 }: MasonryGifCardProps) {
+  const router = useRouter();
   const [isHovered, setIsHovered] = useState(false);
   const [imageError, setImageError] = useState(false);
   const [isPlaying, setIsPlaying] = useState(true);
@@ -137,7 +139,7 @@ export function MasonryGifCard({
                 )}
                 
                 {/* Enhanced overlay controls */}
-                {/* <div className={cn(
+                <div className={cn(
                   "absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent flex items-center justify-center transition-all duration-300",
                   isHovered ? 'opacity-100' : 'opacity-0'
                 )}>
@@ -145,15 +147,15 @@ export function MasonryGifCard({
                     variant="secondary"
                     size="sm"
                     className="glass hover:bg-background/90 text-foreground shadow-lg hover-lift touch-target"
-                    onClick={togglePlayback}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      // Navigate to gif-editor with the GIF URL
+                      router.push(`/gif-editor?gif=${encodeURIComponent(item.url)}`);
+                    }}
                   >
-                    {isPlaying ? (
-                      <Pause className="h-4 w-4" />
-                    ) : (
-                      <Play className="h-4 w-4" />
-                    )}
+                    Edit GIF
                   </Button>
-                </div> */}
+                </div>
 
                 {/* Enhanced selection indicator */}
                 {isSelected && (

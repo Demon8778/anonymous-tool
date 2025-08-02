@@ -27,7 +27,7 @@ export default function Home() {
 
   // Handle category selection from carousel
   const handleCategorySelect = (searchTerm: string) => {
-    // Navigate to generate page with the search term as a query parameter
+    // Navigate to browse page with the search term as a query parameter
     router.push(`/generate?search=${encodeURIComponent(searchTerm)}`);
   };
 
@@ -45,7 +45,7 @@ export default function Home() {
     {
       icon: <Wand2 className="h-8 w-8 text-primary" />,
       title: "Real-time Processing",
-      description: "Generate animated GIFs with text overlays using advanced FFmpeg WASM technology"
+      description: "Create animated GIFs with text overlays using advanced FFmpeg WASM technology"
     },
     {
       icon: <LayoutGrid className="h-8 w-8 text-primary" />,
@@ -206,7 +206,7 @@ export default function Home() {
               {
                 step: "3",
                 title: "Download & Share",
-                description: "Generate your animated GIF and share it instantly on social media or download it.",
+                description: "Create your animated GIF and share it instantly on social media or download it.",
                 icon: <Download className="h-8 w-8" />
               }
             ].map((step, index) => (
@@ -315,7 +315,7 @@ export default function Home() {
               <h3 className="text-lg font-semibold mb-4 text-foreground">Quick Links</h3>
               <div className="space-y-2">
                 {[
-                  { name: "Generate GIFs", href: "/generate" },
+                  { name: "Browse GIFs", href: "/generate" },
                 ].map((link) => (
                   <Link
                     key={link.name}

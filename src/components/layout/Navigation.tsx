@@ -3,7 +3,7 @@
 import * as React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Menu, Sparkles, Wand2 } from "lucide-react";
+import { Menu, Sparkles, Wand2, Search } from "lucide-react";
 // import { ThemeToggle } from "@/components/theme-toggle";
 import {
   Sheet,
@@ -25,9 +25,15 @@ const navigationItems = [
     icon: Sparkles,
   },
   {
-    title: "Generate",
+    title: "Browse",
     href: "/generate",
-    description: "Search, customize, and create GIFs",
+    description: "Search and browse GIFs",
+    icon: Search,
+  },
+  {
+    title: "GIF Editor",
+    href: "/gif-editor",
+    description: "Create GIFs with custom text",
     icon: Wand2,
   },
 ];

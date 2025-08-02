@@ -1,20 +1,26 @@
-import { MetadataRoute } from 'next'
+import { MetadataRoute } from "next";
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const baseUrl = 'https://compressverse.com'
-  
+  const baseUrl = "https://compressverse.com";
+
   return [
     {
       url: baseUrl,
       lastModified: new Date(),
-      changeFrequency: 'daily',
+      changeFrequency: "daily",
       priority: 1,
     },
     {
       url: `${baseUrl}/generate`,
       lastModified: new Date(),
-      changeFrequency: 'daily',
+      changeFrequency: "daily",
       priority: 0.9,
     },
-  ]
+    {
+      url: `${baseUrl}/gif-editor`,
+      lastModified: new Date(),
+      changeFrequency: "weekly",
+      priority: 0.8,
+    },
+  ];
 }

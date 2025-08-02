@@ -214,22 +214,7 @@ export default function GifTextOverlay({
         })}
       </div>
       
-      {/* Debug info */}
-      <div style={{ marginTop: '10px', fontSize: '12px', color: '#666' }}>
-        GIF Size: {gifDimensions.width}x{gifDimensions.height}
-        <br />
-        Display Size: {Math.round(displayDimensions.width)}x{Math.round(displayDimensions.height)}
-        <br />
-        Scale Factor: {scaleFactor.toFixed(3)}
-        <br />
-        Overlays: {overlays.length}
-        {activeOverlayId && (
-          <>
-            <br />
-            Active: {overlays.find(o => o.id === activeOverlayId)?.text || 'None'}
-          </>
-        )}
-      </div>
+
     </div>
   );
 }

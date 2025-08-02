@@ -226,20 +226,34 @@ export class FFmpegProcessor {
       // SIMPLE APPROACH: Try with fonts first, fallback to system fonts
       try {
         const textFilters = this.generateSimpleTextFilters(textOverlays, false);
-        this.updateProgress(0.4, "processing", "Processing text overlays with fonts...");
+        this.updateProgress(
+          0.4,
+          "processing",
+          "Processing text overlays with fonts..."
+        );
         await this.executeFFmpegCommand(textFilters);
         processingSuccessful = true;
       } catch (error) {
         console.warn("Font processing failed, trying system fonts:", error);
-        
+
         try {
-          const textFilters = this.generateSimpleTextFilters(textOverlays, true);
-          this.updateProgress(0.4, "processing", "Processing text overlays with system fonts...");
+          const textFilters = this.generateSimpleTextFilters(
+            textOverlays,
+            true
+          );
+          this.updateProgress(
+            0.4,
+            "processing",
+            "Processing text overlays with system fonts..."
+          );
           await this.executeFFmpegCommand(textFilters);
           processingSuccessful = true;
         } catch (systemError) {
           console.error("System font processing also failed:", systemError);
-          lastError = systemError instanceof Error ? systemError : new Error("Unknown error");
+          lastError =
+            systemError instanceof Error
+              ? systemError
+              : new Error("Unknown error");
           throw lastError;
         }
       }
@@ -414,7 +428,10 @@ export class FFmpegProcessor {
     }
   }
 
-  private generateSimpleTextFilters(overlays: TextOverlay[], useSystemFonts: boolean = false): string {
+  private generateSimpleTextFilters(
+    overlays: TextOverlay[],
+    useSystemFonts: boolean = false
+  ): string {
     const activeOverlays = overlays.filter(
       (overlay) => overlay.text && overlay.text.trim()
     );
@@ -434,7 +451,9 @@ export class FFmpegProcessor {
       const x = `${overlay.position.x}*w/100`;
       const y = `${overlay.position.y}*h/100`;
 
-      console.log(`Simple FFmpeg: "${overlay.text}" at ${overlay.position.x}%, ${overlay.position.y}%`);
+      console.log(
+        `Simple FFmpeg: "${overlay.text}" at ${overlay.position.x}%, ${overlay.position.y}%`
+      );
 
       const drawTextOptions = [
         `text='${escapedText}'`,
@@ -444,7 +463,7 @@ export class FFmpegProcessor {
         `fontcolor=${cleanHex(overlay.style.color)}`,
         `bordercolor=${cleanHex(overlay.style.strokeColor)}`,
         `borderw=${overlay.style.strokeWidth || 0}`,
-        `alpha=${overlay.style.opacity || 1}`
+        `alpha=${overlay.style.opacity || 1}`,
       ];
 
       // Add font file only if not using system fonts
@@ -514,7 +533,9 @@ export class FFmpegProcessor {
     }
   }
 
-  private async executeFFmpegOverlayCommand(overlayFilter: string): Promise<void> {
+  private async executeFFmpegOverlayCommand(
+    overlayFilter: string
+  ): Promise<void> {
     if (!this.ffmpeg) {
       throw new Error("FFmpeg not initialized");
     }
@@ -524,11 +545,16 @@ export class FFmpegProcessor {
     // Build FFmpeg command for image overlay
     // -i input.gif -i text_overlay.png -filter_complex "[0:v][1:v]overlay=0:0[v]" -map "[v]" -y output.gif
     const command = [
-      "-i", "input.gif",           // Input GIF
-      "-i", "text_overlay.png",    // Text overlay image
-      "-filter_complex", overlayFilter, // Overlay filter
-      "-map", "[v]",               // Map the output video
-      "-y", "output.gif"           // Output file
+      "-i",
+      "input.gif", // Input GIF
+      "-i",
+      "text_overlay.png", // Text overlay image
+      "-filter_complex",
+      overlayFilter, // Overlay filter
+      "-map",
+      "[v]", // Map the output video
+      "-y",
+      "output.gif", // Output file
     ];
 
     // Add quality-specific options
@@ -556,7 +582,9 @@ export class FFmpegProcessor {
         if (!outputData || (outputData as Uint8Array).length === 0) {
           throw new Error("FFmpeg produced an empty output file.");
         }
-        console.log(`Output file size: ${(outputData as Uint8Array).length} bytes`);
+        console.log(
+          `Output file size: ${(outputData as Uint8Array).length} bytes`
+        );
       } catch (readError) {
         console.error("Failed to read output file:", readError);
         throw new Error("FFmpeg processing failed - no output file generated");
@@ -696,26 +724,28 @@ export function getTextPosition(
 ): { x: number; y: number } {
   const textRect = textElement.getBoundingClientRect();
   const previewRect = previewElement.getBoundingClientRect();
-  
+
   const x = textRect.left - previewRect.left;
   const y = textRect.top - previewRect.top;
-  
+
   return { x, y };
 }
 
 /**
  * Generate simple FFmpeg drawtext filter string
  */
-export function generateDrawTextFilter(options: SimpleTextOverlayOptions): string {
+export function generateDrawTextFilter(
+  options: SimpleTextOverlayOptions
+): string {
   const {
     text,
     x,
     y,
     fontSize = 24,
-    fontColor = 'white',
-    borderColor = 'black',
+    fontColor = "white",
+    borderColor = "black",
     borderWidth = 2,
-    fontFile = '/font.ttf'
+    fontFile = "/font.ttf",
   } = options;
 
   return `drawtext=fontfile=${fontFile}:text='${text}':x=${x}:y=${y}:fontsize=${fontSize}:fontcolor=${fontColor}:bordercolor=${borderColor}:borderw=${borderWidth}`;

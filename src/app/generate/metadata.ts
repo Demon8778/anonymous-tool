@@ -1,7 +1,7 @@
 import { generateMetadata } from '@/lib/seo'
 
 export const metadata = generateMetadata({
-  title: 'GIF Generator - Create Custom GIFs with Text',
-  description: 'Create amazing animated GIFs with custom text overlays. Search millions of GIFs, add personalized text, and download your creations instantly.',
+  title: 'Browse GIFs - Find and Edit GIFs with Text',
+  description: 'Browse millions of GIFs and add custom text overlays. Search, select, and edit GIFs with personalized text to create your perfect animated content.',
   url: '/generate',
 })
