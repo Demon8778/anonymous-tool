@@ -278,6 +278,35 @@
   .touch-target {
     @apply min-h-[44px] min-w-[44px] flex items-center justify-center;
   }
+
+  /* Mobile-specific touch improvements */
+  @media (hover: none) and (pointer: coarse) {
+    /* Remove hover effects on touch devices */
+    .group:hover .group-hover\:scale-110 {
+      transform: none !important;
+    }
+    
+    .group:hover .group-hover\:rotate-3 {
+      transform: none !important;
+    }
+    
+    .group:hover .group-hover\:rotate-12 {
+      transform: none !important;
+    }
+    
+    /* Enhance active states for better touch feedback */
+    .touch-target:active {
+      transform: scale(0.95);
+      transition: transform 0.1s ease-out;
+    }
+    
+    /* Improve button press feedback */
+    button:active,
+    [role="button"]:active {
+      transform: scale(0.95);
+      transition: transform 0.1s ease-out;
+    }
+  }
 }
 
 @layer utilities {
