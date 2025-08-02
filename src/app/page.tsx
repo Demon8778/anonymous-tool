@@ -240,13 +240,13 @@ export default function Home() {
           <div className="max-w-4xl mx-auto">
             <Badge className="mb-6 bg-primary-foreground/20 text-primary-foreground border-primary-foreground/30 hover:bg-primary-foreground/30 transition-all duration-300 animate-fade-in">
               <Rocket className="h-4 w-4 mr-2" />
-              Join 10K+ Creators
+              Join Other Creators
             </Badge>
             <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight">
               Ready to Create Amazing GIFs?
             </h2>
             <p className="text-xl md:text-2xl mb-8 text-primary-foreground/80 max-w-3xl mx-auto leading-relaxed animate-fade-in-delay">
-              Join thousands of creators who are already making stunning GIFs with our powerful tools
+              Join a lot of creators who are already making stunning GIFs with our powerful tools
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12 animate-slide-up">
               <Link href="/generate">
@@ -295,14 +295,11 @@ export default function Home() {
             {/* Brand */}
             <div className="md:col-span-2">
               <div className="flex items-center gap-2 mb-4">
-                <div className="w-10 h-10 rounded-lg flex items-center justify-center">
-                  {/* <Sparkles className="h-6 w-6 text-primary-foreground" /> */}
-                  <div className="font-primary">
-                  <Image src="/logo.svg" alt="Logo" width={40} height={40}/>
-                  </div>
+                <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center">
+                  <Sparkles className="h-6 w-6 text-primary-foreground" />
                 </div>
-                <span className="text-2xl font-bold text-foreground">
-                CompressVerse
+                <span className="text-2xl font-bold bg-gradient-to-r from-primary via-primary to-primary/60 bg-clip-text text-transparent">
+                  CompressVerse
                 </span>
               </div>
               <p className="text-muted-foreground leading-relaxed mb-6 max-w-md">

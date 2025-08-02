@@ -4,26 +4,18 @@ import React, { useState, useCallback, useEffect, useRef, Suspense } from 'react
 import { useRouter, useSearchParams } from 'next/navigation';
 import {
     Download,
-    RotateCcw,
-    Play,
-    Pause,
-    Settings,
-    Sparkles,
     Zap,
     CheckCircle,
     AlertCircle,
     Info,
     Loader2,
-    Search,
-    ArrowLeft
+    Search
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+
 import { useToast } from '@/hooks/use-toast';
 import { TextOverlayEditor } from '@/components/text/TextOverlayEditor';
 import { DraggableText } from '@/components/text/DraggableText';
@@ -49,7 +41,6 @@ interface GenerationPageState {
 }
 
 function GeneratePageContent() {
-    const router = useRouter();
     const searchParams = useSearchParams();
     const { toast } = useToast();
     const previewRef = useRef<HTMLDivElement>(null);
@@ -65,8 +56,8 @@ function GeneratePageContent() {
         showSuccessAnimation: false,
     });
 
-    // Tab state for search/generate
-    const [activeTab, setActiveTab] = useState<'search' | 'generate'>('search');
+    // View state - simplified to show search or generate
+    const [showGenerate, setShowGenerate] = useState(false);
 
     // Search functionality
     const {
@@ -89,7 +80,6 @@ function GeneratePageContent() {
         openGifEditor,
         openSharing,
         closeDialog,
-        closeAllDialogs,
     } = useDialogState();
 
     // Initialize from URL params
@@ -110,7 +100,7 @@ function GeneratePageContent() {
                 source: 'giphy',
             };
             setState(prev => ({ ...prev, selectedGif: mockGif }));
-            setActiveTab('generate');
+            setShowGenerate(true);
         }
     }, [searchParams, state.selectedGif]);
 
@@ -244,22 +234,7 @@ function GeneratePageContent() {
 
 
 
-    // Handle reset
-    const handleReset = useCallback(() => {
-        setState(prev => ({
-            ...prev,
-            processedGif: null,
-            error: null,
-            showSuccessAnimation: false,
-            processingProgress: { progress: 0, stage: 'loading' }
-        }));
-        clearAllOverlays();
 
-        toast({
-            title: "Reset Complete",
-            description: "All text overlays have been cleared.",
-        });
-    }, [clearAllOverlays, toast]);
 
     // Handle text overlay position updates
     const handleOverlayPositionChange = useCallback((id: string, position: { x: number; y: number }) => {
@@ -289,7 +264,7 @@ function GeneratePageContent() {
             showSuccessAnimation: false,
             processingProgress: { progress: 0, stage: 'loading' }
         }));
-        setActiveTab('generate');
+        setShowGenerate(true);
 
         // Clear existing overlays and add a default text overlay
         clearAllOverlays();
@@ -303,15 +278,7 @@ function GeneratePageContent() {
         });
     }, [setSearchSelectedGif, toast, clearAllOverlays, addOverlay]);
 
-    // Handle opening GIF editor dialog
-    const handleOpenGifEditor = useCallback((gif: Gif) => {
-        const gifWithContext = {
-            ...gif,
-            selectedAt: new Date(),
-            searchQuery: currentQuery,
-        };
-        openGifEditor(gifWithContext);
-    }, [openGifEditor, currentQuery]);
+
 
     // Handle processed GIF from dialog
     const handleGifGenerated = useCallback((processedGif: ProcessedGif) => {
@@ -355,79 +322,48 @@ function GeneratePageContent() {
             </div>
 
             <div className="container mx-auto px-4 py-8">
-                {/* Main Tabs */}
-                <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'search' | 'generate')} className="w-full">
-                    <TabsList className="grid w-full grid-cols-2 mb-8">
-                        <TabsTrigger value="search" className="flex items-center gap-2">
-                            <Search className="h-4 w-4" />
-                            Search GIFs
-                        </TabsTrigger>
-                        <TabsTrigger value="generate" className="flex items-center gap-2" disabled={!state.selectedGif}>
-                            <Zap className="h-4 w-4" />
-                            Generate
-                        </TabsTrigger>
-                    </TabsList>
-
-                    {/* Search Tab */}
-                    <TabsContent value="search" className="space-y-8">
-                        {/* Search Form */}
-                        <GifSearchForm
-                            onSearch={handleSearch}
-                            isLoading={isSearchLoading}
-                            initialQuery={currentQuery || searchParams.get('search') || ""}
-                            placeholder="Search for GIFs to customize..."
-                        />
+                {!showGenerate ? (
+                    /* Search Interface */
+                    <div className="space-y-8">
+                        {/* Global Search Form */}
+                        <div className="max-w-2xl mx-auto text-center space-y-6">
+                            <GifSearchForm
+                                onSearch={handleSearch}
+                                isLoading={isSearchLoading}
+                                initialQuery={currentQuery || searchParams.get('search') || ""}
+                                placeholder="Search for GIFs to customize..."
+                            />
+                        </div>
 
                         {/* Search Results */}
                         {searchResults && (
-                            <div className="space-y-6">
-
-                                <UnifiedGifGrid
-                                    gifs={allGifs}
-                                    onGifSelect={handleGifSelect}
-                                    selectedGifId={searchSelectedGif?.id}
-                                    isLoading={isSearchLoading}
-                                    isLoadingMore={isLoadingMore}
-                                    hasMore={hasMore}
-                                    onLoadMore={loadMoreGifs}
-                                    error={searchError}
-                                    onRetry={() => performSearch(currentQuery)}
-                                    enableInfiniteScroll={true}
-                                    defaultLayoutMode="masonry"
-                                    showLayoutToggle={false}
-                                />
-                            </div>
+                            <UnifiedGifGrid
+                                gifs={allGifs}
+                                onGifSelect={handleGifSelect}
+                                selectedGifId={searchSelectedGif?.id}
+                                isLoading={isSearchLoading}
+                                isLoadingMore={isLoadingMore}
+                                hasMore={hasMore}
+                                onLoadMore={loadMoreGifs}
+                                error={searchError}
+                                onRetry={() => performSearch(currentQuery)}
+                                enableInfiniteScroll={true}
+                                defaultLayoutMode="masonry"
+                                showLayoutToggle={false}
+                            />
                         )}
-                    </TabsContent>
+                    </div>
+                ) : (
+                    /* Generate Interface */
+                    <div className="space-y-8">
+                        {/* Generate Hint */}
+                        <div className="text-center mb-6">
+                            <p className="text-muted-foreground">
+                                Add text overlays to your selected GIF and generate your custom creation
+                            </p>
+                        </div>
 
-                    {/* Generate Tab */}
-                    <TabsContent value="generate" className="space-y-8">
-                        {!state.selectedGif ? (
-                            <div className="text-center py-16">
-                                <Card className="max-w-md mx-auto bg-card/80 backdrop-blur-sm border-border/20">
-                                    <CardContent className="p-8">
-                                        <div className="mb-6">
-                                            <div className="inline-flex p-4 bg-gradient-to-br from-muted/50 to-muted/30 rounded-full mb-4">
-                                                <Info className="h-8 w-8 text-primary" />
-                                            </div>
-                                            <h3 className="text-xl font-bold text-foreground mb-2">
-                                                No GIF Selected
-                                            </h3>
-                                            <p className="text-muted-foreground mb-6">
-                                                Please search and select a GIF to get started with text overlays.
-                                            </p>
-                                            <Button
-                                                onClick={() => setActiveTab('search')}
-                                                className="bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70"
-                                            >
-                                                <Search className="h-4 w-4 mr-2" />
-                                                Search GIFs
-                                            </Button>
-                                        </div>
-                                    </CardContent>
-                                </Card>
-                            </div>
-                        ) : (
+                        {state.selectedGif && (
                             /* Main Content - Split Screen Layout */
                             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                                 {/* Left Panel - GIF Preview */}
@@ -456,7 +392,7 @@ function GeneratePageContent() {
         <Button
           variant="outline"
           size="sm"
-          onClick={() => setActiveTab('search')}
+          onClick={() => setShowGenerate(false)}
         >
           Change GIF
         </Button>
@@ -607,8 +543,8 @@ function GeneratePageContent() {
                                 </div>
                             </div>
                         )}
-                    </TabsContent>
-                </Tabs>
+                    </div>
+                )}
 
                 {/* Dialogs */}
                 {dialogs.gifEditor.isOpen && dialogs.gifEditor.data && (
@@ -625,7 +561,7 @@ function GeneratePageContent() {
                         gif={dialogs.sharing.data}
                         isOpen={dialogs.sharing.isOpen}
                         onClose={() => closeDialog('sharing')}
-                        onShareComplete={(result) => {
+                        onShareComplete={() => {
                             toast({
                                 title: "Share Complete",
                                 description: "Your GIF has been shared successfully!",

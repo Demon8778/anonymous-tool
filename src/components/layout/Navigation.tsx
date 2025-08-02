@@ -3,18 +3,8 @@
 import * as React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Menu, X, Sparkles, Search, Wand2, Share2 } from "lucide-react";
-import { ThemeToggle } from "@/components/theme-toggle";
-
-import {
-  NavigationMenu,
-  NavigationMenuContent,
-  NavigationMenuItem,
-  NavigationMenuLink,
-  NavigationMenuList,
-  NavigationMenuTrigger,
-  navigationMenuTriggerStyle,
-} from "@/components/ui/navigation-menu";
+import { Menu, Sparkles, Wand2 } from "lucide-react";
+// import { ThemeToggle } from "@/components/theme-toggle";
 import {
   Sheet,
   SheetContent,
@@ -52,78 +42,80 @@ export function Navigation() {
         {/* Logo */}
         <div className="mr-4 hidden md:flex">
           <Link href="/" className="mr-6 flex items-center space-x-2 group transition-all duration-300 hover:scale-105">
-            <Image src="/logo.svg" alt="Logo" width={40} height={40}/>
+            <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center group-hover:from-primary/90 group-hover:to-primary/70 transition-all duration-300">
+              <Sparkles className="h-6 w-6 text-primary-foreground group-hover:rotate-12 transition-transform duration-300" />
+            </div>
             <span className="hidden font-bold sm:inline-block bg-gradient-to-r from-primary via-primary to-primary/60 bg-clip-text text-transparent group-hover:from-primary/80 group-hover:to-primary transition-all duration-300">
-              CompressKit
+              CompressVerse
             </span>
           </Link>
         </div>
 
-        {/* Desktop Navigation */}
-        <NavigationMenu className="hidden md:flex">
-          <NavigationMenuList>
+        {/* Desktop Navigation - Right aligned */}
+        <div className="hidden md:flex ml-auto mr-4">
+          <nav className="flex items-center space-x-8">
             {navigationItems.map((item) => (
-              <NavigationMenuItem key={item.href}>
-                {/* <Link href={item.href}> */}
-                  <NavigationMenuLink
-                    href={item.href}
-                    className={cn(
-                      navigationMenuTriggerStyle(),
-                      "group relative overflow-hidden transition-all duration-300 hover:bg-accent/50 hover:scale-105 focus-ring",
-                      pathname === item.href && "bg-accent text-accent-foreground shadow-sm"
-                    )}
-                  >
-                    <item.icon className="mr-2 h-4 w-4 transition-all duration-300 group-hover:scale-110 group-hover:rotate-3" />
-                    {item.title}
-                    {pathname === item.href && (
-                      <div className="absolute bottom-0 left-0 h-0.5 w-full bg-gradient-to-r from-primary to-primary/60 animate-scale-in" />
-                    )}
-                    <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                  </NavigationMenuLink>
-                {/* </Link> */}
-              </NavigationMenuItem>
+              <Link
+                key={item.href}
+                href={item.href}
+                className={cn(
+                  "relative px-3 py-2 text-sm font-medium transition-all duration-300 group",
+                  pathname === item.href 
+                    ? "text-primary" 
+                    : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                {item.title}
+                {/* Active line */}
+                {pathname === item.href && (
+                  <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary animate-scale-in" />
+                )}
+                {/* Hover line */}
+                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary/60 scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left" />
+              </Link>
             ))}
-          </NavigationMenuList>
-        </NavigationMenu>
-
-        {/* Mobile Navigation */}
-        <Sheet open={isOpen} onOpenChange={setIsOpen}>
-          <SheetTrigger asChild>
-            <Button
-              variant="ghost"
-              className="mr-2 px-0 text-base hover:bg-accent/50 focus-ring touch-target md:hidden transition-all duration-200 hover:scale-105"
-            >
-              <Menu className="h-6 w-6 transition-transform duration-200 hover:rotate-3" />
-              <span className="sr-only">Toggle Menu</span>
-            </Button>
-          </SheetTrigger>
-          <SheetContent side="left" className="pr-0 glass border-r">
-            <SheetHeader className="animate-fade-in">
-              <SheetTitle className="flex items-center space-x-2 group">
-                <Sparkles className="h-6 w-6 text-primary group-hover:rotate-12 transition-transform duration-300" />
-                <span className="bg-gradient-to-r from-primary via-primary to-primary/60 bg-clip-text text-transparent">
-                  CompressKit
-                </span>
-              </SheetTitle>
-              <SheetDescription className="text-responsive-sm">
-                Create amazing GIFs with custom text overlays
-              </SheetDescription>
-            </SheetHeader>
-            <MobileNav items={navigationItems} pathname={pathname} setIsOpen={setIsOpen} />
-          </SheetContent>
-        </Sheet>
+          </nav>
+        </div>
 
         {/* Mobile Logo */}
-        <div className="flex flex-1 items-center justify-between space-x-2 md:justify-end">
-          <div className="w-full flex-1 md:w-auto md:flex-none">
-            <Link href="/" className="flex items-center space-x-2 md:hidden group transition-all duration-300 hover:scale-105 focus-ring rounded-md p-1">
-              <Sparkles className="h-6 w-6 text-primary group-hover:rotate-12 transition-transform duration-300" />
-              <span className="font-bold bg-gradient-to-r from-primary via-primary to-primary/60 bg-clip-text text-transparent group-hover:from-primary/80 group-hover:to-primary transition-all duration-300">
-                CompressKit
-              </span>
-            </Link>
-          </div>
-          <ThemeToggle />
+        <div className="flex flex-1 items-center justify-between md:hidden">
+          <Link href="/" className="flex items-center space-x-2 group transition-all duration-300 hover:scale-105 focus-ring rounded-md p-1">
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center group-hover:from-primary/90 group-hover:to-primary/70 transition-all duration-300">
+              <Sparkles className="h-5 w-5 text-primary-foreground group-hover:rotate-12 transition-transform duration-300" />
+            </div>
+            <span className="font-bold bg-gradient-to-r from-primary via-primary to-primary/60 bg-clip-text text-transparent group-hover:from-primary/80 group-hover:to-primary transition-all duration-300">
+              CompressVerse
+            </span>
+          </Link>
+          
+          {/* Mobile Navigation - Right side */}
+          <Sheet open={isOpen} onOpenChange={setIsOpen}>
+            <SheetTrigger asChild>
+              <Button
+                variant="ghost"
+                className="px-0 text-base hover:bg-accent/50 focus-ring touch-target transition-all duration-200 hover:scale-105"
+              >
+                <Menu className="h-6 w-6 transition-transform duration-200 hover:rotate-3" />
+                <span className="sr-only">Toggle Menu</span>
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="top" className="pb-0 glass border-b">
+              <SheetHeader className="animate-fade-in">
+                <SheetTitle className="flex items-center space-x-2 group">
+                  <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center group-hover:from-primary/90 group-hover:to-primary/70 transition-all duration-300">
+                    <Sparkles className="h-5 w-5 text-primary-foreground group-hover:rotate-12 transition-transform duration-300" />
+                  </div>
+                  <span className="bg-gradient-to-r from-primary via-primary to-primary/60 bg-clip-text text-transparent">
+                    CompressVerse
+                  </span>
+                </SheetTitle>
+                <SheetDescription className="text-responsive-sm">
+                  Create amazing GIFs with custom text overlays
+                </SheetDescription>
+              </SheetHeader>
+              <MobileNav items={navigationItems} pathname={pathname} setIsOpen={setIsOpen} />
+            </SheetContent>
+          </Sheet>
         </div>
       </div>
     </header>
@@ -138,8 +130,8 @@ interface MobileNavProps {
 
 function MobileNav({ items, pathname, setIsOpen }: MobileNavProps) {
   return (
-    <div className="my-4 h-[calc(100vh-8rem)] pb-10 pl-6 animate-slide-in-left">
-      <div className="flex flex-col space-y-2">
+    <div className="my-4 pb-6 px-6 animate-slide-in-down">
+      <div className="flex flex-col sm:flex-row sm:justify-center space-y-2 sm:space-y-0 sm:space-x-4">
         {items.map((item, index) => (
           <Link
             key={item.href}
@@ -171,7 +163,7 @@ function MobileNav({ items, pathname, setIsOpen }: MobileNavProps) {
       </div>
       
       {/* Decorative gradient at bottom */}
-      <div className="absolute bottom-0 left-0 right-0 h-20 bg-gradient-to-t from-background to-transparent pointer-events-none" />
+      <div className="absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-background to-transparent pointer-events-none" />
     </div>
   );
 }

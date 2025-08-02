@@ -97,43 +97,39 @@ export function GifSearchForm({
               </Alert>
             )}
 
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <Search className="h-5 w-5 text-muted-foreground" />
+            <div className="flex gap-2">
+              <div className="relative flex-1">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <Search className="h-5 w-5 text-muted-foreground" />
+                </div>
+                <Input
+                  type="text"
+                  value={query}
+                  onChange={handleInputChange}
+                  onKeyDown={handleKeyDown}
+                  placeholder={placeholder}
+                  disabled={isLoading}
+                  className={`pl-10 pr-4 py-3 text-lg bg-background/80 border-border focus:border-primary focus:ring-primary rounded-lg transition-all duration-200 ${
+                    validationError ? 'border-destructive focus:border-destructive focus:ring-destructive' : ''
+                  }`}
+                  autoComplete="off"
+                  autoFocus
+                  maxLength={100}
+                />
               </div>
-              <Input
-                type="text"
-                value={query}
-                onChange={handleInputChange}
-                onKeyDown={handleKeyDown}
-                placeholder={placeholder}
-                disabled={isLoading}
-                className={`pl-10 pr-4 py-3 text-lg bg-background/80 border-border focus:border-primary focus:ring-primary rounded-lg transition-all duration-200 ${
-                  validationError ? 'border-destructive focus:border-destructive focus:ring-destructive' : ''
-                }`}
-                autoComplete="off"
-                autoFocus
-                maxLength={100}
-              />
+              
+              <Button
+                type="submit"
+                disabled={isLoading || !query.trim() || !!validationError}
+                className="px-4 py-3 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-primary-foreground rounded-lg transition-all duration-200 transform hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+              >
+                {isLoading ? (
+                  <Loader2 className="h-5 w-5 animate-spin" />
+                ) : (
+                  <Search className="h-5 w-5" />
+                )}
+              </Button>
             </div>
-            
-            <Button
-              type="submit"
-              disabled={isLoading || !query.trim() || !!validationError}
-              className="w-full py-3 text-lg font-semibold bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-primary-foreground rounded-lg transition-all duration-200 transform hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
-            >
-              {isLoading ? (
-                <>
-                  <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                  Searching...
-                </>
-              ) : (
-                <>
-                  <Search className="mr-2 h-5 w-5" />
-                  Search GIFs
-                </>
-              )}
-            </Button>
           </form>
           
           {/* Enhanced Search tips */}

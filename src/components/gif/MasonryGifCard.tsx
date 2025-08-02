@@ -137,7 +137,7 @@ export function MasonryGifCard({
                 )}
                 
                 {/* Enhanced overlay controls */}
-                <div className={cn(
+                {/* <div className={cn(
                   "absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent flex items-center justify-center transition-all duration-300",
                   isHovered ? 'opacity-100' : 'opacity-0'
                 )}>
@@ -153,7 +153,7 @@ export function MasonryGifCard({
                       <Play className="h-4 w-4" />
                     )}
                   </Button>
-                </div>
+                </div> */}
 
                 {/* Enhanced selection indicator */}
                 {isSelected && (

@@ -10,16 +10,15 @@ import { Input } from '@/components/ui/input';
 import { Slider } from '@/components/ui/slider';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
-import { 
-  Palette, 
-  Type, 
-  AlignLeft, 
-  AlignCenter, 
+import {
+  Palette,
+  Type,
+  AlignLeft,
+  AlignCenter,
   AlignRight,
-  Bold,
   Minus,
   Plus,
   Eye,
@@ -71,14 +70,7 @@ export function TextControls({ style, onStyleChange, className }: TextControlsPr
   };
 
   return (
-    <Card className={cn('w-full', className)}>
-      <CardHeader className="pb-3">
-        <CardTitle className="flex items-center gap-2 text-lg">
-          <Type className="w-5 h-5" />
-          Text Style
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-6">
+    <div className={cn('w-full space-y-6', className)}>
         {/* Font Family */}
         <div className="space-y-2">
           <Label className="text-sm font-medium">Font Family</Label>
@@ -292,11 +284,6 @@ export function TextControls({ style, onStyleChange, className }: TextControlsPr
           />
         </div>
 
-        {/* Gradient background for visual polish */}
-        <div 
-          className="absolute inset-0 -z-10 rounded-lg opacity-5 bg-gradient-to-br from-primary/10 to-accent/10"
-        />
-      </CardContent>
-    </Card>
+    </div>
   );
 }
