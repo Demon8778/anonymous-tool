@@ -11,11 +11,7 @@ import {
   Search,
   Type,
   Download,
-  Star,
-  Heart,
-  Users,
   Wand2,
-  Globe,
   Rocket,
   Zap,
   Shield,
@@ -23,7 +19,8 @@ import {
   LayoutGrid
 } from "lucide-react";
 import CategoryCarousel from "@/components/gif/CategoryCarousel";
-import Image from "next/image";
+import { StructuredData } from "@/components/seo/StructuredData";
+
 
 export default function Home() {
   const router = useRouter();
@@ -67,15 +64,13 @@ export default function Home() {
     }
   ];
 
-  const stats = [
-    { icon: <Users className="h-6 w-6" />, value: "10K+", label: "Active Users" },
-    { icon: <Star className="h-6 w-6" />, value: "50K+", label: "GIFs Created" },
-    { icon: <Heart className="h-6 w-6" />, value: "99%", label: "Satisfaction" },
-    { icon: <Globe className="h-6 w-6" />, value: "24/7", label: "Available" }
-  ];
+
 
   return (
-    <div className="min-h-screen bg-background">
+    <>
+      <StructuredData type="WebApplication" />
+      <StructuredData type="HowTo" />
+      <div className="min-h-screen bg-background">
       {/* Hero Section */}
       <section className="relative overflow-hidden bg-background">
         <div className="absolute inset-0 bg-muted/10 [background-size:50px_50px]"></div>
@@ -371,5 +366,6 @@ export default function Home() {
         <div className="absolute bottom-10 left-10 w-24 h-24 bg-accent/10 rounded-full blur-xl"></div>
       </footer>
     </div>
+    </>
   );
 }
