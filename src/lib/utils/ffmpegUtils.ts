@@ -672,6 +672,55 @@ export async function disposeGlobalFFmpegProcessor(): Promise<void> {
   }
 }
 
+/**
+ * Simple utility functions for text positioning and FFmpeg filter generation
+ */
+
+export interface SimpleTextOverlayOptions {
+  text: string;
+  x: number;
+  y: number;
+  fontSize?: number;
+  fontColor?: string;
+  borderColor?: string;
+  borderWidth?: number;
+  fontFile?: string;
+}
+
+/**
+ * Get text position relative to preview container
+ */
+export function getTextPosition(
+  textElement: HTMLElement,
+  previewElement: HTMLElement
+): { x: number; y: number } {
+  const textRect = textElement.getBoundingClientRect();
+  const previewRect = previewElement.getBoundingClientRect();
+  
+  const x = textRect.left - previewRect.left;
+  const y = textRect.top - previewRect.top;
+  
+  return { x, y };
+}
+
+/**
+ * Generate simple FFmpeg drawtext filter string
+ */
+export function generateDrawTextFilter(options: SimpleTextOverlayOptions): string {
+  const {
+    text,
+    x,
+    y,
+    fontSize = 24,
+    fontColor = 'white',
+    borderColor = 'black',
+    borderWidth = 2,
+    fontFile = '/font.ttf'
+  } = options;
+
+  return `drawtext=fontfile=${fontFile}:text='${text}':x=${x}:y=${y}:fontsize=${fontSize}:fontcolor=${fontColor}:bordercolor=${borderColor}:borderw=${borderWidth}`;
+}
+
 // Re-export utility functions from helpers
 export {
   validateGifFormat,
