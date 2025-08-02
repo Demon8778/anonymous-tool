@@ -246,7 +246,7 @@ export default function Home() {
               Join a lot of creators who are already making stunning GIFs with our powerful tools
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12 animate-slide-up">
-              <Link href="/generate">
+              <Link href="/gif-editor">
                 <Button
                   size="lg"
                   variant="secondary"
@@ -256,8 +256,6 @@ export default function Home() {
                   Start Creating Now
                   <ArrowRight className="h-5 w-5 ml-2 group-hover:translate-x-1 transition-transform" />
                 </Button>
-              </Link>
-              <Link href="/generate">
               </Link>
             </div>
 

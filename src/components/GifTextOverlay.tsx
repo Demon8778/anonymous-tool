@@ -65,17 +65,22 @@ export default function GifTextOverlay({
         // Capture the pointer to ensure we get all subsequent events
         e.currentTarget.setPointerCapture(e.pointerId);
 
+        // Capture the element and coordinates before the timeout
+        const currentTarget = e.currentTarget;
+        const clientX = e.clientX;
+        const clientY = e.clientY;
+
         // Add a small delay before starting drag to allow for double-tap detection
         setTimeout(() => {
-            if (!editingOverlayId) { // Only start dragging if not editing
+            if (!editingOverlayId && currentTarget) { // Only start dragging if not editing and element exists
                 setIsDragging(true);
                 setDraggedOverlayId(overlayId);
 
-                const overlayRect = e.currentTarget.getBoundingClientRect();
+                const overlayRect = currentTarget.getBoundingClientRect();
 
                 setDragOffset({
-                    x: e.clientX - overlayRect.left,
-                    y: e.clientY - overlayRect.top
+                    x: clientX - overlayRect.left,
+                    y: clientY - overlayRect.top
                 });
             }
         }, e.pointerType === 'touch' ? 100 : 0); // Small delay for touch events
@@ -142,73 +147,93 @@ export default function GifTextOverlay({
 
     // Custom tap handler for mobile double-tap detection
     const handleOverlayTap = (e: React.TouchEvent | React.MouseEvent, overlayId: string) => {
-        e.stopPropagation();
-        
-        const currentTime = Date.now();
-        const lastTap = lastTapRef.current;
-        
-        // Check if this is a double-tap
-        if (
-            lastTap.overlayId === overlayId && 
-            currentTime - lastTap.time < DOUBLE_TAP_DELAY
-        ) {
-            // Double-tap detected - start editing
-            console.log('Double-tap detected on mobile for overlay:', overlayId);
-            setEditingOverlayId(overlayId);
-            onOverlaySelect?.(overlayId);
+        try {
+            e.stopPropagation();
             
-            // Focus the input after a short delay to ensure it's rendered
-            setTimeout(() => {
-                editInputRef.current?.focus();
-                editInputRef.current?.select();
-            }, 50); // Slightly longer delay for mobile
+            const currentTime = Date.now();
+            const lastTap = lastTapRef.current;
             
-            // Reset tap tracking
-            lastTapRef.current = { time: 0, overlayId: null };
-        } else {
-            // Single tap - just select
-            onOverlaySelect?.(overlayId);
-            
-            // Update tap tracking
-            lastTapRef.current = { time: currentTime, overlayId };
-            
-            console.log('Single tap on overlay:', overlayId, 'at time:', currentTime);
+            // Check if this is a double-tap
+            if (
+                lastTap.overlayId === overlayId && 
+                currentTime - lastTap.time < DOUBLE_TAP_DELAY
+            ) {
+                // Double-tap detected - start editing
+                console.log('Double-tap detected on mobile for overlay:', overlayId);
+                setEditingOverlayId(overlayId);
+                onOverlaySelect?.(overlayId);
+                
+                // Focus the input after a short delay to ensure it's rendered
+                setTimeout(() => {
+                    if (editInputRef.current) {
+                        editInputRef.current.focus();
+                        editInputRef.current.select();
+                    }
+                }, 50); // Slightly longer delay for mobile
+                
+                // Reset tap tracking
+                lastTapRef.current = { time: 0, overlayId: null };
+            } else {
+                // Single tap - just select
+                onOverlaySelect?.(overlayId);
+                
+                // Update tap tracking
+                lastTapRef.current = { time: currentTime, overlayId };
+                
+                console.log('Single tap on overlay:', overlayId, 'at time:', currentTime);
+            }
+        } catch (error) {
+            console.error('Error in handleOverlayTap:', error);
         }
     };
 
     // Alternative: Long press to edit (fallback for mobile)
     const handleLongPress = (overlayId: string) => {
-        console.log('Long press detected for overlay:', overlayId);
-        setEditingOverlayId(overlayId);
-        onOverlaySelect?.(overlayId);
-        
-        setTimeout(() => {
-            editInputRef.current?.focus();
-            editInputRef.current?.select();
-        }, 50);
+        try {
+            console.log('Long press detected for overlay:', overlayId);
+            setEditingOverlayId(overlayId);
+            onOverlaySelect?.(overlayId);
+            
+            setTimeout(() => {
+                if (editInputRef.current) {
+                    editInputRef.current.focus();
+                    editInputRef.current.select();
+                }
+            }, 50);
+        } catch (error) {
+            console.error('Error in handleLongPress:', error);
+        }
     };
 
     // Long press detection
     const longPressTimerRef = useRef<NodeJS.Timeout | null>(null);
     
     const handleTouchStart = (e: React.TouchEvent, overlayId: string) => {
-        e.stopPropagation();
-        
-        // Start long press timer
-        longPressTimerRef.current = setTimeout(() => {
-            handleLongPress(overlayId);
-        }, 500); // 500ms for long press
+        try {
+            e.stopPropagation();
+            
+            // Start long press timer
+            longPressTimerRef.current = setTimeout(() => {
+                handleLongPress(overlayId);
+            }, 500); // 500ms for long press
+        } catch (error) {
+            console.error('Error in handleTouchStart:', error);
+        }
     };
 
     const handleTouchEnd = (e: React.TouchEvent, overlayId: string) => {
-        // Clear long press timer
-        if (longPressTimerRef.current) {
-            clearTimeout(longPressTimerRef.current);
-            longPressTimerRef.current = null;
+        try {
+            // Clear long press timer
+            if (longPressTimerRef.current) {
+                clearTimeout(longPressTimerRef.current);
+                longPressTimerRef.current = null;
+            }
+            
+            // Handle tap detection
+            handleOverlayTap(e, overlayId);
+        } catch (error) {
+            console.error('Error in handleTouchEnd:', error);
         }
-        
-        // Handle tap detection
-        handleOverlayTap(e, overlayId);
     };
 
     const handleEditComplete = (overlayId: string, newText: string) => {
@@ -262,6 +287,16 @@ export default function GifTextOverlay({
         window.addEventListener('resize', handleResize);
         return () => window.removeEventListener('resize', handleResize);
     }, [updateDimensions]);
+
+    // Cleanup effect to clear any pending timeouts
+    useEffect(() => {
+        return () => {
+            if (longPressTimerRef.current) {
+                clearTimeout(longPressTimerRef.current);
+                longPressTimerRef.current = null;
+            }
+        };
+    }, []);
 
     const handleContainerClick = (e: React.MouseEvent) => {
         // Only deselect if clicking on the container itself, not on text overlays
