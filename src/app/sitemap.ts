@@ -1,7 +1,7 @@
 import { MetadataRoute } from "next";
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const baseUrl = "https://compressverse.com";
+  const baseUrl = "https://compressverse.vercel.app";
   const currentDate = new Date();
 
   return [

@@ -3,7 +3,8 @@
 import * as React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Menu, Sparkles, Wand2, Search } from "lucide-react";
+import { Menu, Wand2, Search, Home } from "lucide-react";
+import { Logo } from "@/components/ui/logo";
 // import { ThemeToggle } from "@/components/theme-toggle";
 import {
   Sheet,
@@ -21,7 +22,7 @@ const navigationItems = [
     title: "Home",
     href: "/",
     description: "Welcome to CompressVerse",
-    icon: Sparkles,
+    icon: Home,
   },
   {
     title: "Browse",
@@ -53,9 +54,7 @@ export function Navigation() {
         {/* Logo */}
         <div className="mr-4 hidden md:flex">
           <Link href="/" className="mr-6 flex items-center space-x-2 group transition-all duration-300 hover:scale-105">
-            <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center group-hover:from-primary/90 group-hover:to-primary/70 transition-all duration-300">
-              <Sparkles className="h-6 w-6 text-primary-foreground group-hover:rotate-12 transition-transform duration-300" />
-            </div>
+            <Logo size={40} className="group-hover:scale-110 transition-transform duration-300" />
             <span className="hidden font-bold sm:inline-block bg-gradient-to-r from-primary via-primary to-primary/60 bg-clip-text text-transparent group-hover:from-primary/80 group-hover:to-primary transition-all duration-300">
               CompressVerse
             </span>
@@ -97,15 +96,13 @@ export function Navigation() {
               !isTouchDevice && "hover:scale-105"
             )}
           >
-            <div className={cn(
-              "w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center transition-all duration-300",
-              !isTouchDevice && "group-hover:from-primary/90 group-hover:to-primary/70"
-            )}>
-              <Sparkles className={cn(
-                "h-5 w-5 text-primary-foreground transition-transform duration-300",
-                !isTouchDevice && "group-hover:rotate-12"
-              )} />
-            </div>
+            <Logo 
+              size={32} 
+              className={cn(
+                "transition-transform duration-300",
+                !isTouchDevice && "group-hover:scale-110"
+              )} 
+            />
             <span className={cn(
               "font-bold bg-gradient-to-r from-primary via-primary to-primary/60 bg-clip-text text-transparent transition-all duration-300",
               !isTouchDevice && "group-hover:from-primary/80 group-hover:to-primary"
@@ -134,9 +131,7 @@ export function Navigation() {
             <SheetContent side="top" className="pb-0 glass border-b">
               <SheetHeader className="animate-fade-in">
                 <SheetTitle className="flex items-center space-x-2 group">
-                  <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center group-hover:from-primary/90 group-hover:to-primary/70 transition-all duration-300">
-                    <Sparkles className="h-5 w-5 text-primary-foreground group-hover:rotate-12 transition-transform duration-300" />
-                  </div>
+                  <Logo size={32} className="group-hover:scale-110 transition-transform duration-300" />
                   <span className="bg-gradient-to-r from-primary via-primary to-primary/60 bg-clip-text text-transparent">
                     CompressVerse
                   </span>

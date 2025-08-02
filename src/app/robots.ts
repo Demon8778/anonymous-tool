@@ -24,7 +24,7 @@ export default function robots(): MetadataRoute.Robots {
         ],
       },
     ],
-    sitemap: 'https://compressverse.com/sitemap.xml',
-    host: 'https://compressverse.com',
+    sitemap: 'https://compressverse.vercel.app/sitemap.xml',
+    host: 'https://compressverse.vercel.app',
   }
 }

@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 import CategoryCarousel from "@/components/gif/CategoryCarousel";
 import { StructuredData } from "@/components/seo/StructuredData";
+import { Logo } from "@/components/ui/logo";
 
 
 export default function Home() {
@@ -340,9 +341,7 @@ export default function Home() {
             {/* Brand */}
             <div className="md:col-span-2">
               <div className="flex items-center gap-2 mb-4">
-                <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center">
-                  <Sparkles className="h-6 w-6 text-primary-foreground" />
-                </div>
+                <Logo size={40} />
                 <span className="text-2xl font-bold bg-gradient-to-r from-primary via-primary to-primary/60 bg-clip-text text-transparent">
                   CompressVerse
                 </span>

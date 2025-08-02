@@ -38,7 +38,7 @@ Disallow: /admin/
 Disallow: /_next/
 Disallow: /test-results/
 
-Sitemap: https://compressverse.com/sitemap.xml
+Sitemap: https://compressverse.vercel.app/sitemap.xml
 ```
 
 ### Sitemap.xml Structure:

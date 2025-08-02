@@ -4,8 +4,8 @@ export const siteConfig = {
   name: 'CompressVerse',
   title: 'CompressVerse - Create Amazing GIFs with Custom Text Overlays',
   description: 'Create stunning animated GIFs with custom text overlays using CompressVerse. Search millions of GIFs from Klipy, add personalized text with full customization, and share your creations instantly. Free online GIF editor and meme generator.',
-  url: 'https://compressverse.com',
-  ogImage: 'https://compressverse.com/og-image.jpg',
+  url: 'https://compressverse.vercel.app',
+  ogImage: 'https://compressverse.vercel.app/og-image.jpg',
   keywords: [
     'GIF generator',
     'text overlay GIF',
@@ -36,7 +36,7 @@ export const siteConfig = {
   authors: [
     {
       name: 'CompressVerse Team',
-      url: 'https://compressverse.com',
+      url: 'https://compressverse.vercel.app',
     },
   ],
   creator: 'CompressVerse',
