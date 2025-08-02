@@ -1,6 +1,8 @@
 'use client';
 
 import { useState, useRef, useCallback, useEffect } from 'react';
+import { Settings, Trash2 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 interface TextOverlay {
     id: string;
@@ -23,6 +25,8 @@ interface GifTextOverlayProps {
     onOverlayUpdate?: (id: string, updates: Partial<TextOverlay>) => void;
     onOverlaySelect?: (id: string | null) => void;
     onScaleFactorChange?: (scaleFactor: number) => void;
+    onOverlayRemove?: (id: string) => void;
+    onTextControlsOpen?: (id: string) => void;
 }
 
 export default function GifTextOverlay({
@@ -31,7 +35,9 @@ export default function GifTextOverlay({
     activeOverlayId,
     onOverlayUpdate,
     onOverlaySelect,
-    onScaleFactorChange
+    onScaleFactorChange,
+    onOverlayRemove,
+    onTextControlsOpen
 }: GifTextOverlayProps) {
     const [isDragging, setIsDragging] = useState(false);
     const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
@@ -464,6 +470,55 @@ export default function GifTextOverlay({
                 })}
             </div>
 
+            {/* Individual text control buttons - positioned below each text overlay */}
+            {overlays.map((overlay) => {
+                const isActive = activeOverlayId === overlay.id;
+                if (!isActive || editingOverlayId === overlay.id) return null;
+
+                const responsiveStyle = getResponsiveStyle(overlay);
+                const buttonY = (overlay.position.y * scaleFactor) + (parseInt(responsiveStyle.fontSize || '16') * 1.5);
+                const buttonX = overlay.position.x * scaleFactor;
+
+                return (
+                    <div
+                        key={`controls-${overlay.id}`}
+                        style={{
+                            position: 'absolute',
+                            top: `${buttonY}px`,
+                            left: `${buttonX}px`,
+                            display: 'flex',
+                            gap: '4px',
+                            zIndex: 4,
+                            pointerEvents: 'auto'
+                        }}
+                    >
+                        <Button
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                onTextControlsOpen?.(overlay.id);
+                            }}
+                            size="sm"
+                            variant="secondary"
+                            className="h-6 w-6 p-0 bg-background/90 backdrop-blur-sm hover:bg-background border shadow-sm"
+                            title="Text Controls"
+                        >
+                            <Settings className="h-3 w-3" />
+                        </Button>
+                        <Button
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                onOverlayRemove?.(overlay.id);
+                            }}
+                            size="sm"
+                            variant="destructive"
+                            className="h-6 w-6 p-0 bg-destructive/90 backdrop-blur-sm hover:bg-destructive border shadow-sm"
+                            title="Remove Text"
+                        >
+                            <Trash2 className="h-3 w-3" />
+                        </Button>
+                    </div>
+                );
+            })}
 
         </div>
     );

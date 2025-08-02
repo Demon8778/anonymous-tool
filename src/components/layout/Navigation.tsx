@@ -71,8 +71,8 @@ export function Navigation() {
                 href={item.href}
                 className={cn(
                   "relative px-3 py-2 text-sm font-medium transition-all duration-300 group",
-                  pathname === item.href 
-                    ? "text-primary" 
+                  pathname === item.href
+                    ? "text-primary"
                     : "text-muted-foreground hover:text-foreground"
                 )}
               >
@@ -90,8 +90,8 @@ export function Navigation() {
 
         {/* Mobile Logo */}
         <div className="flex flex-1 items-center justify-between md:hidden">
-          <Link 
-            href="/" 
+          <Link
+            href="/"
             className={cn(
               "flex items-center space-x-2 group transition-all duration-300 focus-ring rounded-md p-1",
               !isTouchDevice && "hover:scale-105"
@@ -113,7 +113,7 @@ export function Navigation() {
               CompressVerse
             </span>
           </Link>
-          
+
           {/* Mobile Navigation - Right side */}
           <Sheet open={isOpen} onOpenChange={setIsOpen}>
             <SheetTrigger asChild>
@@ -212,7 +212,7 @@ function MobileNav({ items, pathname, setIsOpen }: MobileNavProps) {
           </Link>
         ))}
       </div>
-      
+
       {/* Decorative gradient at bottom */}
       <div className="absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-background to-transparent pointer-events-none" />
     </div>

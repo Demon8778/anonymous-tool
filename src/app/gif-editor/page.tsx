@@ -35,6 +35,7 @@ function GifEditorContent() {
   const [scaleFactor, setScaleFactor] = useState(1);
   const [isTextControlsOpen, setIsTextControlsOpen] = useState(false);
   const [isOnline, setIsOnline] = useState(true);
+  const [isMobileLayout, setIsMobileLayout] = useState(false);
 
   // Handle GIF URL from query parameter
   useEffect(() => {
@@ -63,6 +64,20 @@ function GifEditorContent() {
     return () => {
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
+
+  // Monitor screen size for layout changes
+  useEffect(() => {
+    const checkScreenSize = () => {
+      setIsMobileLayout(window.innerWidth < 1280); // xl breakpoint
+    };
+
+    checkScreenSize();
+    window.addEventListener('resize', checkScreenSize);
+
+    return () => {
+      window.removeEventListener('resize', checkScreenSize);
     };
   }, []);
 
@@ -197,6 +212,14 @@ function GifEditorContent() {
       const url = URL.createObjectURL(blob);
       setProcessedGifUrl(url);
 
+      // Scroll to result section after processing
+      setTimeout(() => {
+        const resultSection = document.getElementById('processed-result');
+        if (resultSection) {
+          resultSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      }, 100);
+
     } catch (error) {
       console.error('Processing failed:', error);
 
@@ -291,49 +314,158 @@ function GifEditorContent() {
         {/* Main Content - Only show if GIF is uploaded */}
         {gifSrc !== '/your.gif' && (
           <div className="space-y-6">
-            {/* Preview Panel - Side by Side Layout */}
-            <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-              {/* Original GIF with Text Overlays */}
-              <Card className="overflow-hidden">
+            {/* Preview Panel */}
+            <Card className="overflow-hidden">
+              <CardHeader>
+                <CardTitle className="text-lg flex items-center gap-2">
+                  Original with Text
+                  {!isOnline && (
+                    <Badge variant="destructive" className="text-xs">
+                      Offline
+                    </Badge>
+                  )}
+                </CardTitle>
+                <p className="text-sm text-muted-foreground">
+                  <span className="hidden sm:inline">Double-click text to edit inline • Drag to move • Click to select</span>
+                  <span className="sm:hidden">Tap to select • Double-tap or long-press to edit • Drag to move</span>
+                  {!isOnline && (
+                    <span className="block text-destructive mt-1">
+                      Internet connection required for processing
+                    </span>
+                  )}
+                </p>
+              </CardHeader>
+              <CardContent className="p-4 space-y-4">
+                <div className="w-full bg-gradient-to-br from-muted/30 to-muted/10 rounded-lg p-6 min-h-[350px] flex items-center justify-center border relative">
+                  <div className="relative w-full max-w-full flex justify-center">
+                    <GifTextOverlay
+                      gifSrc={gifSrc}
+                      overlays={overlays}
+                      activeOverlayId={activeOverlayId}
+                      onOverlayUpdate={updateOverlay}
+                      onOverlaySelect={setActiveOverlayId}
+                      onScaleFactorChange={setScaleFactor}
+                      onOverlayRemove={removeTextOverlay}
+                      onTextControlsOpen={(id) => {
+                        setActiveOverlayId(id);
+                        setIsTextControlsOpen(true);
+                      }}
+                    />
+                  </div>
+                  
+                  {/* Processing Overlay */}
+                  {isProcessing && (
+                    <div className="absolute inset-0 bg-background/80 backdrop-blur-sm rounded-lg flex items-center justify-center z-10">
+                      <div className="text-center">
+                        <div className="w-16 h-16 mx-auto mb-4 relative">
+                          <div className="absolute inset-0 rounded-full border-4 border-muted"></div>
+                          <div className="absolute inset-0 rounded-full border-4 border-primary border-t-transparent animate-spin"></div>
+                        </div>
+                        <p className="text-lg font-medium text-foreground mb-2">Processing GIF</p>
+                        <p className="text-sm text-muted-foreground">{processingStatus}</p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Action Buttons - Always part of preview card */}
+                <div className="grid grid-cols-2 gap-3">
+                  <Button
+                    onClick={addTextOverlay}
+                    disabled={overlays.length >= 2 || isProcessing}
+                    variant="default"
+                    className="w-full"
+                  >
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add Text {overlays.length >= 2 && '(Max 2)'}
+                  </Button>
+
+                  <Button
+                    onClick={() => processGif()}
+                    disabled={isProcessing || overlays.length === 0 || !isOnline}
+                    className="w-full"
+                  >
+                    {isProcessing ? (
+                      <>
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        Processing...
+                      </>
+                    ) : (
+                      <>
+                        <Zap className="h-4 w-4 mr-2" />
+                        Process GIF
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+
+
+
+            {/* Processed GIF Result - Side by side on larger screens */}
+            {!isMobileLayout ? (
+              <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+                <div></div> {/* Spacer for desktop layout */}
+                <Card className="overflow-hidden" id="processed-result">
+                  <CardHeader>
+                    <CardTitle className="text-lg flex items-center justify-between">
+                      Processed Result
+                      {processedGifUrl && (
+                        <Button
+                          onClick={downloadGif}
+                          size="sm"
+                          variant="secondary"
+                          className="h-8 w-8 p-0"
+                          title="Download Processed GIF"
+                        >
+                          <Download className="h-4 w-4" />
+                        </Button>
+                      )}
+                    </CardTitle>
+                    <p className="text-sm text-muted-foreground">
+                      {processedGifUrl ? 'Your processed GIF is ready!' : 'Click "Process GIF" to generate the final result'}
+                    </p>
+                  </CardHeader>
+                  <CardContent className="p-4">
+                    <div className="w-full bg-gradient-to-br from-muted/30 to-muted/10 rounded-lg p-6 min-h-[350px] flex items-center justify-center border">
+                      {processedGifUrl ? (
+                        <img
+                          src={processedGifUrl}
+                          alt="Processed GIF"
+                          className="max-w-full h-auto rounded-lg shadow-sm border border-border/50"
+                          style={{ display: 'block' }}
+                        />
+                      ) : (
+                        <div className="text-center text-muted-foreground">
+                          <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-muted flex items-center justify-center">
+                            <Zap className="h-8 w-8" />
+                          </div>
+                          <p className="font-medium">No processed GIF yet</p>
+                          <p className="text-sm mt-1">Add text and click "Process GIF" to generate</p>
+                        </div>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            ) : (
+              <Card className="overflow-hidden" id="processed-result">
                 <CardHeader>
-                  <CardTitle className="text-lg flex items-center gap-2">
-                    Original with Text
-                    {!isOnline && (
-                      <Badge variant="destructive" className="text-xs">
-                        Offline
-                      </Badge>
+                  <CardTitle className="text-lg flex items-center justify-between">
+                    Processed Result
+                    {processedGifUrl && (
+                      <Button
+                        onClick={downloadGif}
+                        size="sm"
+                        variant="secondary"
+                        className="h-8 w-8 p-0"
+                        title="Download Processed GIF"
+                      >
+                        <Download className="h-4 w-4" />
+                      </Button>
                     )}
                   </CardTitle>
-                  <p className="text-sm text-muted-foreground">
-                    <span className="hidden sm:inline">Double-click text to edit inline • Drag to move • Click to select</span>
-                    <span className="sm:hidden">Tap to select • Double-tap or long-press to edit • Drag to move</span>
-                    {!isOnline && (
-                      <span className="block text-destructive mt-1">
-                        Internet connection required for processing
-                      </span>
-                    )}
-                  </p>
-                </CardHeader>
-                <CardContent className="p-4">
-                  <div className="w-full bg-gradient-to-br from-muted/30 to-muted/10 rounded-lg p-6 min-h-[350px] flex items-center justify-center border">
-                    <div className="relative w-full max-w-full flex justify-center">
-                      <GifTextOverlay
-                        gifSrc={gifSrc}
-                        overlays={overlays}
-                        activeOverlayId={activeOverlayId}
-                        onOverlayUpdate={updateOverlay}
-                        onOverlaySelect={setActiveOverlayId}
-                        onScaleFactorChange={setScaleFactor}
-                      />
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Processed GIF Result */}
-              <Card className="overflow-hidden">
-                <CardHeader>
-                  <CardTitle className="text-lg">Processed Result</CardTitle>
                   <p className="text-sm text-muted-foreground">
                     {processedGifUrl ? 'Your processed GIF is ready!' : 'Click "Process GIF" to generate the final result'}
                   </p>
@@ -359,74 +491,9 @@ function GifEditorContent() {
                   </div>
                 </CardContent>
               </Card>
-            </div>
+            )}
 
-            {/* Action Buttons */}
-            <Card>
-              <CardContent className="pt-6">
-                <div className="space-y-3">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-                    <Button
-                      onClick={addTextOverlay}
-                      disabled={overlays.length >= 2}
-                      variant="default"
-                    >
-                      <Plus className="h-4 w-4 mr-2" />
-                      Add Text {overlays.length >= 2 && '(Max 2)'}
-                    </Button>
 
-                    <Button
-                      onClick={() => setIsTextControlsOpen(true)}
-                      disabled={overlays.length === 0}
-                      variant="outline"
-                    >
-                      <Settings className="h-4 w-4 mr-2" />
-                      Text Controls
-                    </Button>
-
-                    {activeOverlayId && (
-                      <Button
-                        onClick={() => removeTextOverlay(activeOverlayId)}
-                        variant="destructive"
-                      >
-                        <Trash2 className="h-4 w-4 mr-2" />
-                        Remove Selected
-                      </Button>
-                    )}
-
-                    <Button
-                      onClick={() => processGif()}
-                      disabled={isProcessing || overlays.length === 0 || !isOnline}
-                      className="sm:col-span-2 lg:col-span-1"
-                    >
-                      {isProcessing ? (
-                        <>
-                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                          {processingStatus}
-                        </>
-                      ) : (
-                        <>
-                          <Zap className="h-4 w-4 mr-2" />
-                          Process GIF
-                        </>
-                      )}
-                    </Button>
-                  </div>
-
-                  {processedGifUrl && (
-                    <Button
-                      onClick={downloadGif}
-                      variant="secondary"
-                      className="w-full"
-                      size="lg"
-                    >
-                      <Download className="h-4 w-4 mr-2" />
-                      Download Processed GIF
-                    </Button>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
 
             {/* Text Layers Quick View */}
             {/* {overlays.length > 0 && (
